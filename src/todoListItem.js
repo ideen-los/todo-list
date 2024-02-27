@@ -6,9 +6,10 @@ export class TodoListItem {
     this.description = description;
     this.dueDate = dueDate;
     this.priority = priority;
-    // Increment the static globalID for TodoObject to ensure a unique instanceID for each new instance
-    TodoObject.globalID += 1;
-    // Assign the newly incremented globalID to this instance's instanceID
-    this.instanceID = TodoObject.globalID;
+    // Increment the static globalID for TodoObject when the class
+    // is called to ensure a unique instanceID for each new instance
+    TodoListItem.globalID += 1;
+    // Assign the incremented globalID to the new instance
+    this.instanceID = TodoListItem.globalID;
   }
 }
