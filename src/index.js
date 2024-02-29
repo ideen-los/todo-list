@@ -1,25 +1,22 @@
 import "./style.scss";
 import { TodoListItem } from "./todoListItem";
 import { ProjectItem } from "./projectItem";
-import {
-  populateNav,
-  populateContent,
-  activateProjectLinks,
-} from "./domManipulation";
-import {
-  createDefaultElements,
-  createDefaultElements2,
-} from "./defaultElements";
-
-const defaultProject = createDefaultElements();
-const defaultProject2 = createDefaultElements2();
-const projects = [];
-
-// Pushing the element to the projects array returns the new length of the array
-let indexOfProject = projects.push(defaultProject, defaultProject2);
+import { populateNav, populateContent, getDataProjectId } from "./dom";
+import { findProjectById, projects } from "./data";
 
 populateNav(projects);
 // Substract 1 from the array length to get the correct index position of the project
-populateContent(projects[indexOfProject - 1].array);
+populateContent(projects[0]);
 // Add event listeners to project links
-activateProjectLinks();
+(function activateProjectLinks() {
+  const projectLinks = document.querySelectorAll("nav a");
+
+  projectLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const projectId = getDataProjectId(e);
+      const project = findProjectById(projectId);
+      console.log(project);
+      populateContent(project);
+    });
+  });
+})();

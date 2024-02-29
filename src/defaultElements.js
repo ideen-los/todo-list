@@ -21,10 +21,10 @@ export function createDefaultElements2() {
   const defaultProject2 = new ProjectItem("2", "Default Project2");
   const defaultItem2 = new TodoListItem(
     "2",
-    "Default Task",
-    "This is the default task",
-    "2024-09-13",
-    "medium"
+    "Default Task2",
+    "This is the default task2",
+    "2024-05-09",
+    "high"
   );
   defaultProject2.array.push(defaultItem2);
 

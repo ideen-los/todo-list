@@ -1,16 +1,15 @@
 export class TodoListItem {
-  static globalID = 0;
+  static hiddenProperties = ["projectId"]; // Define property, that should not be visible to the public
 
-  constructor(projectID, title, description, dueDate, priority) {
-    this.projectID = projectID;
+  constructor(projectId, title, description, dueDate, priority) {
+    this.projectId = projectId;
     this.title = title;
     this.description = description;
     this.dueDate = dueDate;
     this.priority = priority;
-    // Increment the static globalID for TodoObject when the class
-    // is called to ensure a unique instanceID for each new instance
-    TodoListItem.globalID += 1;
-    // Assign the incremented globalID to the new instance
-    this.instanceID = TodoListItem.globalID;
+  }
+
+  isHiddenProperty(property) {
+    return TodoListItem.hiddenProperties.includes(property);
   }
 }
