@@ -1,4 +1,4 @@
-export class ProjectItem {
+export class TodoProjectItem {
   constructor(id, name) {
     this.id = id;
     this.name = name;
