@@ -1,6 +1,9 @@
 export class TodoProjectItem {
-  constructor(id, name) {
-    this.id = id;
+  static globalId = 0;
+
+  constructor(name) {
+    TodoProjectItem.globalId += 1;
+    this.id = TodoProjectItem.globalId.toString();
     this.name = name;
     this.array = [];
   }

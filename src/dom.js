@@ -1,34 +1,68 @@
+import { getActiveProject, projects } from "./data";
+
 /* CONTENT POPULATION
 ####################################################################*/
-const content = document.querySelector("#content");
-const nav = document.querySelector("nav");
+export function getContent() {
+  return document.querySelector("#content .tasks-container");
+}
+export function getNav() {
+  return document.querySelector("nav");
+}
+export function getProjectLinks() {
+  const nav = getNav();
+  return nav.querySelectorAll("a");
+}
+export function getProjectHeadline() {
+  return document.querySelector("h1");
+}
 
-/* Function to display all project names wrapped in an <a> inside the nav section */
-export function populateNav(projectsArray) {
-  projectsArray.forEach((project) => {
+/* Function to red the projects array, wrap all project
+names in an <a> tag and list them in the <nav> section */
+export function populateNav() {
+  const nav = getNav();
+  nav.innerHTML = "";
+
+  projects.forEach((project) => {
     let projectLink = createHyperlink(project);
     nav.appendChild(projectLink);
   });
 }
 
-/* Function to display all list items of a project inside the content section.
-The items are all wrapped in a <div> and the items properties are wrapped in a <span> */
+/* Function to display all list items associated with a project inside the content section.
+The items are all wrapped in a <div>, while the items properties are wrapped in a <span> */
 export function populateContent(project) {
-  project.array.forEach((listItem) => {
-    let listItemWrapper = createListItemWrapper(listItem);
-    for (let key in listItem) {
-      if (listItem.hasOwnProperty(key) && !listItem.isHiddenProperty(key)) {
-        let listItemKeyWrapper = document.createElement("span");
-        listItemKeyWrapper.textContent = listItem[key];
-        listItemWrapper.appendChild(listItemKeyWrapper);
-      }
-    }
+  const content = getContent();
+  content.innerHTML = "";
+  setProjectHeadline();
 
-    content.innerHTML = "";
-    content.appendChild(listItemWrapper);
-  });
+  if (project.array.length > 0) {
+    project.array.forEach((listItem) => {
+      let listItemWrapper = createListItemWrapper(listItem);
+      /* Wrap all property values of list items in a HTML <span> tag */
+      for (let key in listItem) {
+        /* Check if the key belongs to the list item and not to the prototype
+        and if the key is not part of the isHiddenProperty array */
+        if (listItem.hasOwnProperty(key) && !listItem.isHiddenProperty(key)) {
+          if (key !== "title") {
+            let listItemKeyWrapper = document.createElement("span");
+            listItemKeyWrapper.textContent = listItem[key];
+            listItemWrapper.appendChild(listItemKeyWrapper);
+            /* Wrap the title value in a special editable <div> */
+          } else {
+            let listItemTitleWrapper = createListItemTitleWrapper();
+            listItemTitleWrapper.textContent = listItem[key];
+            listItemWrapper.appendChild(listItemTitleWrapper);
+          }
+        }
+      }
+
+      content.appendChild(listItemWrapper);
+    });
+  }
 }
 
+/* DOM ELEMENT CREATION
+####################################################################*/
 /* Function to streamline the creation of hyperlinks */
 function createHyperlink(project) {
   let link = document.createElement("a");
@@ -48,21 +82,61 @@ function createListItemWrapper(listItem) {
   return wrapper;
 }
 
-/* DATA EXRACTION
+function createListItemTitleWrapper() {
+  const titleWrapper = document.createElement("div");
+  titleWrapper.contentEditable = "true";
+
+  return titleWrapper;
+}
+
+/* DOM ELEMENT MANIPULATION
+####################################################################*/
+function removeAllActiveClasses() {
+  const projectLinks = getProjectLinks();
+  projectLinks.forEach((link) => {
+    if (link.classList.contains("active")) link.classList.remove("active");
+  });
+}
+
+export function addActiveClass(htmlElement) {
+  removeAllActiveClasses();
+  htmlElement.classList.add("active");
+}
+
+export function setProjectHeadline() {
+  const headline = getProjectHeadline();
+  headline.textContent = getActiveProject().name;
+}
+
+/* DOM ELEMENT DATA RETRIEVAL
 ####################################################################*/
 /* Function to retrieve the data-project-id
 from a project that has been clicked on */
-export function getDataProjectId(event) {
-  console.log(event.target.getAttribute("data-project-id"));
-  return event.target.getAttribute("data-project-id");
+export function getDataProjectId(element) {
+  return element.getAttribute("data-project-id");
+}
+
+export function getActiveProjectId() {
+  const projectLinks = getProjectLinks();
+  let projectId = "";
+
+  projectLinks.forEach((link) => {
+    if (link.classList.contains("active")) {
+      projectId = getDataProjectId(link);
+    }
+  });
+
+  return projectId;
 }
 
 /* DATA INPUT
 ####################################################################*/
-(function addProjectInputToNav() {
+(function addProjectInputFieldToNav() {
+  const inputWrapper = document.querySelector(".input-wrapper");
+
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "Project name";
 
-  nav.appendChild(input);
+  inputWrapper.appendChild(input);
 })();

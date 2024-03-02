@@ -1,9 +1,17 @@
 import { TodoListItem } from "./todoListItemClass";
 import { TodoProjectItem } from "./todoProjectClass";
+import {
+  getProjectLinks,
+  populateContent,
+  getDataProjectId,
+  getActiveProjectId,
+} from "./dom";
 
+/* DEFAULT DATA CREATION
+####################################################################*/
 /* Function to create a default project and todo item */
 function createDefaultElements() {
-  const defaultProject = new TodoProjectItem("1", "Default Project");
+  const defaultProject = new TodoProjectItem("Default Project");
   const defaultItem = new TodoListItem(
     "1",
     "Default Task",
@@ -18,7 +26,7 @@ function createDefaultElements() {
 
 /* Function to create a default project and todo item */
 function createDefaultElements2() {
-  const defaultProject2 = new TodoProjectItem("2", "Default Project2");
+  const defaultProject2 = new TodoProjectItem("Default Project2");
   const defaultItem2 = new TodoListItem(
     "2",
     "Default Task2",
@@ -32,23 +40,46 @@ function createDefaultElements2() {
 }
 
 /* Save the default data into two variables */
-const defaultProject = createDefaultElements();
-const defaultProject2 = createDefaultElements2();
+export const defaultProject = createDefaultElements();
+export const defaultProject2 = createDefaultElements2();
 
-/* Create an array for the projects that store the list items */
+/* PROJECT DATA MANAGEMENT
+####################################################################*/
+/* Create an array that stores all the projects */
 export const projects = [];
 
-/* Function to add a new project to the projects array */
-export function addNewProjectsToArray(...newProjects) {
+/* Function to add a new projects to the projects array */
+export function storeProjects(...newProjects) {
   newProjects.forEach((project) => {
     projects.push(project);
   });
 }
 
-/* Push default data onto project array */
-addNewProjectsToArray(defaultProject, defaultProject2);
-
 /* Function to find a project by it's ID in the projects array */
 export function findProjectById(projectId) {
   return projects.find((project) => project.id === projectId);
+}
+
+/* Function to create a new project from a string and store it in the projects array */
+export function createAndStoreNewProject(projectName) {
+  const newProject = new TodoProjectItem(projectName);
+  storeProjects(newProject);
+}
+
+/* Function to find the project object
+that is currently active in the DOM */
+export function getActiveProject() {
+  const projectId = getActiveProjectId();
+
+  return findProjectById(projectId);
+}
+
+/* LIST ITEM DATA MANAGEMENT
+####################################################################*/
+export function createAndStoreNewListItem() {
+  const activeProject = getActiveProject();
+
+  const newListItem = new TodoListItem(activeProject.id, "New Task");
+  activeProject.array.push(newListItem);
+  populateContent(activeProject);
 }

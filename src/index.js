@@ -1,35 +1,68 @@
 import "./style.scss";
-import { TodoListItem } from "./todoListItemClass";
-import { TodoProjectItem } from "./todoProjectClass";
-import { populateNav, populateContent, getDataProjectId } from "./dom";
-import { findProjectById, projects, addNewProjectsToArray } from "./data";
+import {
+  getNav,
+  getProjectLinks,
+  populateNav,
+  populateContent,
+  addActiveClass,
+  getDataProjectId,
+} from "./dom";
+import {
+  findProjectById,
+  defaultProject,
+  defaultProject2,
+  projects,
+  storeProjects,
+  createAndStoreNewProject,
+  createAndStoreNewListItem,
+} from "./data";
 
-populateNav(projects);
-populateContent(projects[0]);
-
-/* Add event listeners to project links, so a click reveals 
+/* EVENT LISTENER FUNCTIONS
+####################################################################*/
+/* Add event listeners to project links, so a click displays 
 the list items associated with the respective project name  */
-(function activateProjectLinks() {
-  const projectLinks = document.querySelectorAll("nav a");
-
-  projectLinks.forEach((link) => {
-    link.addEventListener("click", (event) => {
-      const projectId = getDataProjectId(event);
+function activateProjectLinks() {
+  const nav = getNav();
+  nav.addEventListener("click", (event) => {
+    if (event.target.tagName === "A") {
+      const projectId = getDataProjectId(event.target);
       const project = findProjectById(projectId);
-      console.log(project);
+      addActiveClass(event.target);
       populateContent(project);
-    });
+    }
   });
-})();
+}
 
-(function getNewProjectFromInput() {
-  const input = document.querySelector("nav input");
+/* Add event listener to input that lets user enter a new project name */
+(function getNewProjectFromInputField() {
+  const input = document.querySelector(".input-wrapper input");
 
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.keyCode === 13) {
       event.preventDefault();
-      const newProject = input.value;
-      addNewProjectsToArray(newProject);
+      createAndStoreNewProject(input.value);
+      populateNav();
     }
   });
 })();
+
+(function activateNewTaskButton() {
+  const newTaskButton = document.querySelector(".add-task-item");
+
+  newTaskButton.addEventListener("click", createAndStoreNewListItem);
+})();
+
+/* APP INITIALIZATION
+####################################################################*/
+/* Push default data onto project array */
+storeProjects(defaultProject, defaultProject2);
+/* Display the name of all projects in the <nav> section */
+populateNav();
+/* Add event listeners to the project names in the <nav> section so
+associated list items are revealed via click on the respective project name */
+activateProjectLinks();
+/* Add class "active" to first project link in the project links array */
+addActiveClass(getProjectLinks()[0]);
+/* Display all list items associated with the default project
+(the first project in the projects array) inside the content div */
+populateContent(projects[0]);
