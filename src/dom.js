@@ -1,3 +1,4 @@
+import { activateListItemNameField } from ".";
 import { getActiveProject, projects } from "./data";
 
 /* CONTENT POPULATION
@@ -14,6 +15,14 @@ export function getProjectLinks() {
 }
 export function getProjectHeadline() {
   return document.querySelector("h1");
+}
+export function getListItems() {
+  const content = getContent();
+  return content.querySelectorAll(".list-item");
+}
+export function getListItemNameFields() {
+  const content = getContent();
+  return content.querySelectorAll(".list-item .list-item__name");
 }
 
 /* Function to red the projects array, wrap all project
@@ -57,6 +66,7 @@ export function populateContent(project) {
       }
 
       content.appendChild(listItemWrapper);
+      activateListItemNameField();
     });
   }
 }
@@ -78,12 +88,14 @@ function createListItemWrapper(listItem) {
   let wrapper = document.createElement("div");
   wrapper.classList.add("list-item");
   wrapper.setAttribute("data-project-id", listItem.projectId);
+  wrapper.setAttribute("data-item-id", listItem.id);
 
   return wrapper;
 }
 
 function createListItemTitleWrapper() {
   const titleWrapper = document.createElement("div");
+  titleWrapper.classList.add("list-item__name");
   titleWrapper.contentEditable = "true";
 
   return titleWrapper;
@@ -116,6 +128,14 @@ export function getDataProjectId(element) {
   return element.getAttribute("data-project-id");
 }
 
+/* Function to retrieve the data-item-id from 
+a list item that is currently being edited */
+export function getDataItemtId(element) {
+  return element.getAttribute("data-item-id");
+}
+
+/* Function to retrieve the data-project-id from a 
+project that currently has the "active" class */
 export function getActiveProjectId() {
   const projectLinks = getProjectLinks();
   let projectId = "";

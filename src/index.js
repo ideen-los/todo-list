@@ -2,6 +2,8 @@ import "./style.scss";
 import {
   getNav,
   getProjectLinks,
+  getListItems,
+  getListItemNameFields,
   populateNav,
   populateContent,
   addActiveClass,
@@ -15,6 +17,7 @@ import {
   storeProjects,
   createAndStoreNewProject,
   createAndStoreNewListItem,
+  storeListItemName,
 } from "./data";
 
 /* EVENT LISTENER FUNCTIONS
@@ -46,23 +49,46 @@ function activateProjectLinks() {
   });
 })();
 
+/* Add event listener to the "New task" button */
 (function activateNewTaskButton() {
   const newTaskButton = document.querySelector(".add-task-item");
 
   newTaskButton.addEventListener("click", createAndStoreNewListItem);
 })();
 
+/* Add event listener to the <div> that wraps the
+editable name of currently active list item elements */
+export function activateListItemNameField() {
+  const listItemNameFields = getListItemNameFields();
+
+  listItemNameFields.forEach((field) => {
+    field.addEventListener("input", storeListItemName);
+  });
+
+  listItemNameFields.forEach((field) => {
+    console.log("Attaching event listener keydown to title field");
+    field.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.keyCode === 13) {
+        event.preventDefault();
+        createAndStoreNewListItem();
+      }
+    });
+  });
+}
+
 /* APP INITIALIZATION
 ####################################################################*/
 /* Push default data onto project array */
 storeProjects(defaultProject, defaultProject2);
-/* Display the name of all projects in the <nav> section */
-populateNav();
-/* Add event listeners to the project names in the <nav> section so
-associated list items are revealed via click on the respective project name */
-activateProjectLinks();
-/* Add class "active" to first project link in the project links array */
-addActiveClass(getProjectLinks()[0]);
-/* Display all list items associated with the default project
-(the first project in the projects array) inside the content div */
-populateContent(projects[0]);
+document.addEventListener("DOMContentLoaded", () => {
+  /* Display the name of all projects in the <nav> section */
+  populateNav();
+  /* Add event listeners to the project names in the <nav> section so
+  associated list items are revealed via click on the respective project name */
+  activateProjectLinks();
+  /* Add class "active" to first project link in the project links array */
+  addActiveClass(getProjectLinks()[0]);
+  /* Display all list items associated with the default project
+  (the first project in the projects array) inside the content div */
+  populateContent(projects[0]);
+});

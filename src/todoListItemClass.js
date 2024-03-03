@@ -1,5 +1,6 @@
 export class TodoListItem {
-  static hiddenProperties = ["projectId"]; // Define property, that should not be visible to the public
+  static hiddenProperties = ["projectId", "id"]; // Define property, that should not be visible to the public
+  static globalId = 0;
 
   constructor(
     projectId,
@@ -13,6 +14,8 @@ export class TodoListItem {
     this.description = description;
     this.dueDate = dueDate;
     this.priority = priority;
+    TodoListItem.globalId += 1;
+    this.id = TodoListItem.globalId.toString();
   }
 
   isHiddenProperty(property) {

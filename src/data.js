@@ -5,7 +5,9 @@ import {
   populateContent,
   getDataProjectId,
   getActiveProjectId,
+  getDataItemtId,
 } from "./dom";
+import DOMPurify from "dompurify";
 
 /* DEFAULT DATA CREATION
 ####################################################################*/
@@ -66,8 +68,7 @@ export function createAndStoreNewProject(projectName) {
   storeProjects(newProject);
 }
 
-/* Function to find the project object
-that is currently active in the DOM */
+/* Function to find the project object that is currently active in the DOM */
 export function getActiveProject() {
   const projectId = getActiveProjectId();
 
@@ -77,9 +78,23 @@ export function getActiveProject() {
 /* LIST ITEM DATA MANAGEMENT
 ####################################################################*/
 export function createAndStoreNewListItem() {
-  const activeProject = getActiveProject();
+  const project = getActiveProject();
+  const newListItem = new TodoListItem(project.id, "New Task");
+  project.array.push(newListItem);
+  populateContent(project);
+}
 
-  const newListItem = new TodoListItem(activeProject.id, "New Task");
-  activeProject.array.push(newListItem);
-  populateContent(activeProject);
+/* Function to change the  title of a list item if it is edited by the user */
+export function storeListItemName(event) {
+  let value = event.target.textContent;
+  const sanitizedValue = DOMPurify.sanitize(value);
+  const activeListItemId = getDataItemtId(event.target.parentNode);
+  const activeListItem = findListItemById(activeListItemId);
+  activeListItem.title = sanitizedValue;
+}
+
+/* Function to find a listItem by it's ID in the array of the current active project */
+export function findListItemById(itemId) {
+  const project = getActiveProject();
+  return project.array.find((item) => item.id === itemId);
 }
