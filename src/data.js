@@ -5,7 +5,7 @@ import {
   populateContent,
   getDataProjectId,
   getActiveProjectId,
-  getDataItemtId,
+  getItemId,
 } from "./dom";
 import DOMPurify from "dompurify";
 
@@ -82,13 +82,15 @@ export function createAndStoreNewListItem() {
   const newListItem = new TodoListItem(project.id, "New Task");
   project.array.push(newListItem);
   populateContent(project);
+
+  return newListItem.id;
 }
 
 /* Function to change the  title of a list item if it is edited by the user */
 export function storeListItemName(event) {
   let value = event.target.textContent;
   const sanitizedValue = DOMPurify.sanitize(value);
-  const activeListItemId = getDataItemtId(event.target.parentNode);
+  const activeListItemId = getItemId(event.target.parentNode);
   const activeListItem = findListItemById(activeListItemId);
   activeListItem.title = sanitizedValue;
 }

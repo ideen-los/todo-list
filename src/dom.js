@@ -20,10 +20,6 @@ export function getListItems() {
   const content = getContent();
   return content.querySelectorAll(".list-item");
 }
-export function getListItemNameFields() {
-  const content = getContent();
-  return content.querySelectorAll(".list-item .list-item__name");
-}
 
 /* Function to red the projects array, wrap all project
 names in an <a> tag and list them in the <nav> section */
@@ -47,17 +43,18 @@ export function populateContent(project) {
   if (project.array.length > 0) {
     project.array.forEach((listItem) => {
       let listItemWrapper = createListItemWrapper(listItem);
-      /* Wrap all property values of list items in a HTML <span> tag */
+
       for (let key in listItem) {
         /* Check if the key belongs to the list item and not to the prototype
         and if the key is not part of the isHiddenProperty array */
         if (listItem.hasOwnProperty(key) && !listItem.isHiddenProperty(key)) {
           if (key !== "title") {
+            /* Wrap all property values of list items in a HTML <span> tag */
             let listItemKeyWrapper = document.createElement("span");
             listItemKeyWrapper.textContent = listItem[key];
             listItemWrapper.appendChild(listItemKeyWrapper);
-            /* Wrap the title value in a special editable <div> */
           } else {
+            /* Wrap the title value in a special editable <div> */
             let listItemTitleWrapper = createListItemTitleWrapper();
             listItemTitleWrapper.textContent = listItem[key];
             listItemWrapper.appendChild(listItemTitleWrapper);
@@ -66,7 +63,6 @@ export function populateContent(project) {
       }
 
       content.appendChild(listItemWrapper);
-      activateListItemNameField();
     });
   }
 }
@@ -88,7 +84,7 @@ function createListItemWrapper(listItem) {
   let wrapper = document.createElement("div");
   wrapper.classList.add("list-item");
   wrapper.setAttribute("data-project-id", listItem.projectId);
-  wrapper.setAttribute("data-item-id", listItem.id);
+  wrapper.id = listItem.id;
 
   return wrapper;
 }
@@ -97,12 +93,14 @@ function createListItemTitleWrapper() {
   const titleWrapper = document.createElement("div");
   titleWrapper.classList.add("list-item__name");
   titleWrapper.contentEditable = "true";
+  titleWrapper.tabIndex = "1";
 
   return titleWrapper;
 }
 
 /* DOM ELEMENT MANIPULATION
 ####################################################################*/
+/* Function to remove all "active" classes from the project links */
 function removeAllActiveClasses() {
   const projectLinks = getProjectLinks();
   projectLinks.forEach((link) => {
@@ -110,11 +108,14 @@ function removeAllActiveClasses() {
   });
 }
 
+/* Function to add the class "active" to an html element */
 export function addActiveClass(htmlElement) {
   removeAllActiveClasses();
   htmlElement.classList.add("active");
 }
 
+/* Function to set the headline above the task
+items to the title of the active project */
 export function setProjectHeadline() {
   const headline = getProjectHeadline();
   headline.textContent = getActiveProject().name;
@@ -122,16 +123,20 @@ export function setProjectHeadline() {
 
 /* DOM ELEMENT DATA RETRIEVAL
 ####################################################################*/
-/* Function to retrieve the data-project-id
-from a project that has been clicked on */
-export function getDataProjectId(element) {
-  return element.getAttribute("data-project-id");
+/* Function to retrieve the data-project-id from a project */
+export function getDataProjectId(htmlElement) {
+  return htmlElement.getAttribute("data-project-id");
 }
 
-/* Function to retrieve the data-item-id from 
-a list item that is currently being edited */
-export function getDataItemtId(element) {
-  return element.getAttribute("data-item-id");
+/* Function to retrieve the id from an html element */
+export function getItemId(htmlElement) {
+  return htmlElement.id;
+}
+
+/* Function to retrieve an html element by its id */
+export function getListItemNameFieldById(id) {
+  const listItem = document.getElementById(id);
+  return listItem.querySelector(".list-item__name");
 }
 
 /* Function to retrieve the data-project-id from a 

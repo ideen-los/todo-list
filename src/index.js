@@ -1,13 +1,14 @@
 import "./style.scss";
 import {
   getNav,
+  getContent,
   getProjectLinks,
   getListItems,
-  getListItemNameFields,
   populateNav,
   populateContent,
   addActiveClass,
   getDataProjectId,
+  getListItemNameFieldById,
 } from "./dom";
 import {
   findProjectById,
@@ -56,23 +57,25 @@ function activateProjectLinks() {
   newTaskButton.addEventListener("click", createAndStoreNewListItem);
 })();
 
-/* Add event listener to the <div> that wraps the
-editable name of currently active list item elements */
+/* Add event listener to the <div> that wraps all of the tasks.
+As soon as the editable name of currently active list item
+elements is edited, store the changes in the list item */
 export function activateListItemNameField() {
-  const listItemNameFields = getListItemNameFields();
+  const content = getContent();
 
-  listItemNameFields.forEach((field) => {
-    field.addEventListener("input", storeListItemName);
+  content.addEventListener("input", (event) => {
+    if (event.target.matches(".list-item__name")) {
+      storeListItemName(event);
+    }
   });
 
-  listItemNameFields.forEach((field) => {
-    console.log("Attaching event listener keydown to title field");
-    field.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.keyCode === 13) {
-        event.preventDefault();
-        createAndStoreNewListItem();
-      }
-    });
+  content.addEventListener("keydown", (event) => {
+    if (event.target.matches(".list-item__name") && event.key === "Enter") {
+      event.preventDefault();
+      const newListItemId = createAndStoreNewListItem();
+      const newListItem = getListItemNameFieldById(newListItemId);
+      newListItem.focus();
+    }
   });
 }
 
@@ -83,12 +86,16 @@ storeProjects(defaultProject, defaultProject2);
 document.addEventListener("DOMContentLoaded", () => {
   /* Display the name of all projects in the <nav> section */
   populateNav();
+  /* Add class "active" to first project link in the project links array */
+  addActiveClass(getProjectLinks()[0]);
   /* Add event listeners to the project names in the <nav> section so
   associated list items are revealed via click on the respective project name */
   activateProjectLinks();
-  /* Add class "active" to first project link in the project links array */
-  addActiveClass(getProjectLinks()[0]);
   /* Display all list items associated with the default project
   (the first project in the projects array) inside the content div */
   populateContent(projects[0]);
+  /* Add event listeners "input" and "keydown" to the <div> "tasks-container"
+  to store any changes the user is making on the list items title and
+  add a new list item, when the user hits Enter */
+  activateListItemNameField();
 });
