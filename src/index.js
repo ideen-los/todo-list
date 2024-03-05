@@ -9,6 +9,7 @@ import {
   addActiveClass,
   getDataProjectId,
   getListItemNameFieldById,
+  getItemId,
 } from "./dom";
 import {
   findProjectById,
@@ -19,20 +20,23 @@ import {
   createAndStoreNewProject,
   createAndStoreNewListItem,
   storeListItemName,
+  getActiveProject,
+  updateOrRemoveListItem,
+  findListItemById,
 } from "./data";
 
 /* EVENT LISTENER FUNCTIONS
 ####################################################################*/
 /* Add event listeners to project links, so a click displays 
-the list items associated with the respective project name  */
+all list items associated with the respective project name  */
 function activateProjectLinks() {
   const nav = getNav();
   nav.addEventListener("click", (event) => {
     if (event.target.tagName === "A") {
       const projectId = getDataProjectId(event.target);
-      const project = findProjectById(projectId);
+      const projectObject = findProjectById(projectId);
       addActiveClass(event.target);
-      populateContent(project);
+      populateContent(projectObject);
     }
   });
 }
@@ -54,14 +58,20 @@ function activateProjectLinks() {
 (function activateNewTaskButton() {
   const newTaskButton = document.querySelector(".add-task-item");
 
-  newTaskButton.addEventListener("click", createAndStoreNewListItem);
+  newTaskButton.addEventListener("click", () => {
+    const activeProject = getActiveProject();
+    createAndStoreNewListItem();
+    populateContent(activeProject);
+  });
 })();
 
-/* Add event listener to the <div> that wraps all of the tasks.
-As soon as the editable name of currently active list item
-elements is edited, store the changes in the list item */
+/* Add event listeners to the <div> that wraps all of the list items.
+"Input" so the editable name of currently the list item is stored. 
+Also "keydown" , so a new List item is created, whenever Enter is 
+pressed while a list items name is being edited */
 export function activateListItemNameField() {
   const content = getContent();
+  const activeProject = getActiveProject();
 
   content.addEventListener("input", (event) => {
     if (event.target.matches(".list-item__name")) {
@@ -69,12 +79,28 @@ export function activateListItemNameField() {
     }
   });
 
+  content.addEventListener("focusout", (event) => {
+    if (event.target.matches(".list-item__name")) {
+      const listItemId = getItemId(event.target.parentNode);
+      updateOrRemoveListItem(listItemId, event.target.textContent, event);
+      document.querySelector("body").focus();
+    }
+  });
+
   content.addEventListener("keydown", (event) => {
     if (event.target.matches(".list-item__name") && event.key === "Enter") {
-      event.preventDefault();
-      const newListItemId = createAndStoreNewListItem();
-      const newListItem = getListItemNameFieldById(newListItemId);
-      newListItem.focus();
+      if (event.target.textContent !== "") {
+        event.preventDefault();
+        const newListItemId = createAndStoreNewListItem();
+        populateContent(activeProject);
+        const newListItem = getListItemNameFieldById(newListItemId);
+        newListItem.focus();
+        newListItem.textContent = "";
+      } else {
+        const listItemId = getItemId(event.target.parentNode);
+        updateOrRemoveListItem(listItemId, event.target.textContent, event);
+        populateContent(activeProject);
+      }
     }
   });
 }

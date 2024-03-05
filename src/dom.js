@@ -1,7 +1,7 @@
-import { activateListItemNameField } from ".";
 import { getActiveProject, projects } from "./data";
+import DOMPurify from "dompurify";
 
-/* CONTENT POPULATION
+/* DOM ELEMENT SELECTION
 ####################################################################*/
 export function getContent() {
   return document.querySelector("#content .tasks-container");
@@ -21,6 +21,8 @@ export function getListItems() {
   return content.querySelectorAll(".list-item");
 }
 
+/* CONTENT POPULATION
+####################################################################*/
 /* Function to red the projects array, wrap all project
 names in an <a> tag and list them in the <nav> section */
 export function populateNav() {
@@ -135,13 +137,15 @@ export function getItemId(htmlElement) {
 
 /* Function to retrieve an html element by its id */
 export function getListItemNameFieldById(id) {
+  console.log(id);
   const listItem = document.getElementById(id);
+  console.log(listItem);
   return listItem.querySelector(".list-item__name");
 }
 
 /* Function to retrieve the data-project-id from a 
 project that currently has the "active" class */
-export function getActiveProjectId() {
+export function findActiveProjectId() {
   const projectLinks = getProjectLinks();
   let projectId = "";
 
@@ -165,3 +169,8 @@ export function getActiveProjectId() {
 
   inputWrapper.appendChild(input);
 })();
+
+/* Function to sanitize user input DataTransfer, to prevent XSS attacks */
+export function sanitizeUserData(data) {
+  return DOMPurify.sanitize(data);
+}

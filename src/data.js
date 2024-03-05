@@ -4,8 +4,9 @@ import {
   getProjectLinks,
   populateContent,
   getDataProjectId,
-  getActiveProjectId,
+  findActiveProjectId,
   getItemId,
+  sanitizeUserData,
 } from "./dom";
 import DOMPurify from "dompurify";
 
@@ -70,33 +71,47 @@ export function createAndStoreNewProject(projectName) {
 
 /* Function to find the project object that is currently active in the DOM */
 export function getActiveProject() {
-  const projectId = getActiveProjectId();
+  const activeProjectId = findActiveProjectId();
 
-  return findProjectById(projectId);
+  return findProjectById(activeProjectId);
 }
 
 /* LIST ITEM DATA MANAGEMENT
 ####################################################################*/
 export function createAndStoreNewListItem() {
-  const project = getActiveProject();
-  const newListItem = new TodoListItem(project.id, "New Task");
-  project.array.push(newListItem);
-  populateContent(project);
+  const activeProject = getActiveProject();
+  const newListItem = new TodoListItem(activeProject.id, "New Task");
+  activeProject.array.push(newListItem);
 
   return newListItem.id;
 }
 
 /* Function to change the  title of a list item if it is edited by the user */
 export function storeListItemName(event) {
-  let value = event.target.textContent;
-  const sanitizedValue = DOMPurify.sanitize(value);
+  const sanitizedValue = sanitizeUserData(event.target.textContent);
   const activeListItemId = getItemId(event.target.parentNode);
-  const activeListItem = findListItemById(activeListItemId);
-  activeListItem.title = sanitizedValue;
+  updateOrRemoveListItem(activeListItemId, sanitizedValue, event);
 }
 
-/* Function to find a listItem by it's ID in the array of the current active project */
+export function updateOrRemoveListItem(itemId, itemName, event) {
+  const activeListItem = findListItemById(itemId);
+  if (itemName !== "") {
+    activeListItem.title = itemName;
+  } else if (event.inputType !== "deleteContentBackward") {
+    removeListItemById(itemId);
+  }
+}
+
+/* Function to find a listItem by it's ID in the array of the active project */
 export function findListItemById(itemId) {
-  const project = getActiveProject();
-  return project.array.find((item) => item.id === itemId);
+  const activeProject = getActiveProject();
+  return activeProject.array.find((item) => item.id === itemId);
+}
+
+/* Function to remove a list item by it's ID from the array of the active project */
+export function removeListItemById(itemId) {
+  const activeProject = getActiveProject();
+  const itemIndex = activeProject.array.findIndex((item) => item.id === itemId);
+  activeProject.array.splice(itemIndex, 1);
+  populateContent(activeProject);
 }
