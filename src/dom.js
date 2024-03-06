@@ -1,4 +1,4 @@
-import { getActiveProject, projects } from "./data";
+import { getActiveProject, projectsArray } from "./data";
 import DOMPurify from "dompurify";
 
 /* DOM ELEMENT SELECTION
@@ -29,7 +29,7 @@ export function updateNav() {
   const nav = getNav();
   nav.innerHTML = "";
 
-  projects.forEach((project) => {
+  projectsArray.forEach((project) => {
     let projectLink = createHyperlink(project);
     nav.appendChild(projectLink);
   });
