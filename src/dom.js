@@ -13,7 +13,7 @@ export function getProjectLinks() {
   const nav = getNav();
   return nav.querySelectorAll("a");
 }
-export function getProjectHeadline() {
+export function getContentHeadline() {
   return document.querySelector("h1");
 }
 export function getListItems() {
@@ -21,11 +21,11 @@ export function getListItems() {
   return content.querySelectorAll(".list-item");
 }
 
-/* CONTENT POPULATION
+/* CONTENT UPDATE
 ####################################################################*/
 /* Function to red the projects array, wrap all project
 names in an <a> tag and list them in the <nav> section */
-export function populateNav() {
+export function updateNav() {
   const nav = getNav();
   nav.innerHTML = "";
 
@@ -37,14 +37,14 @@ export function populateNav() {
 
 /* Function to display all list items associated with a project inside the content section.
 The items are all wrapped in a <div>, while the items properties are wrapped in a <span> */
-export function populateContent(project) {
+export function updateContent(project) {
   const content = getContent();
   content.innerHTML = "";
-  setProjectHeadline();
+  updateContentHeadline();
 
   if (project.array.length > 0) {
     project.array.forEach((listItem) => {
-      let listItemWrapper = createListItemWrapper(listItem);
+      let listItemWrapper = createListItemContainer(listItem);
 
       for (let key in listItem) {
         /* Check if the key belongs to the list item and not to the prototype
@@ -82,7 +82,7 @@ function createHyperlink(project) {
 }
 
 /* Function to streamline the creation divs that wrap the list items */
-function createListItemWrapper(listItem) {
+function createListItemContainer(listItem) {
   let wrapper = document.createElement("div");
   wrapper.classList.add("list-item");
   wrapper.setAttribute("data-project-id", listItem.projectId);
@@ -118,9 +118,15 @@ export function addActiveClass(htmlElement) {
 
 /* Function to set the headline above the task
 items to the title of the active project */
-export function setProjectHeadline() {
-  const headline = getProjectHeadline();
+export function updateContentHeadline() {
+  const headline = getContentHeadline();
   headline.textContent = getActiveProject().name;
+}
+
+export function focusElementAndClearContent(id) {
+  const newListItem = getListItemNameFieldById(id);
+  newListItem.focus();
+  newListItem.textContent = "";
 }
 
 /* DOM ELEMENT DATA RETRIEVAL
@@ -131,15 +137,13 @@ export function getDataProjectId(htmlElement) {
 }
 
 /* Function to retrieve the id from an html element */
-export function getItemId(htmlElement) {
+export function getElementId(htmlElement) {
   return htmlElement.id;
 }
 
 /* Function to retrieve an html element by its id */
 export function getListItemNameFieldById(id) {
-  console.log(id);
   const listItem = document.getElementById(id);
-  console.log(listItem);
   return listItem.querySelector(".list-item__name");
 }
 
@@ -147,15 +151,15 @@ export function getListItemNameFieldById(id) {
 project that currently has the "active" class */
 export function findActiveProjectId() {
   const projectLinks = getProjectLinks();
-  let projectId = "";
+  let activeProjectId = "";
 
   projectLinks.forEach((link) => {
     if (link.classList.contains("active")) {
-      projectId = getDataProjectId(link);
+      activeProjectId = getDataProjectId(link);
     }
   });
 
-  return projectId;
+  return activeProjectId;
 }
 
 /* DATA INPUT

@@ -2,10 +2,10 @@ import { TodoListItem } from "./todoListItemClass";
 import { TodoProjectItem } from "./todoProjectClass";
 import {
   getProjectLinks,
-  populateContent,
+  updateContent,
   getDataProjectId,
   findActiveProjectId,
-  getItemId,
+  getElementId,
   sanitizeUserData,
 } from "./dom";
 import DOMPurify from "dompurify";
@@ -49,24 +49,24 @@ export const defaultProject2 = createDefaultElements2();
 /* PROJECT DATA MANAGEMENT
 ####################################################################*/
 /* Create an array that stores all the projects */
-export const projects = [];
+export const projectsArray = [];
 
 /* Function to add a new projects to the projects array */
-export function storeProjects(...newProjects) {
+export function storeProject(...newProjects) {
   newProjects.forEach((project) => {
-    projects.push(project);
+    projectsArray.push(project);
   });
 }
 
 /* Function to find a project by it's ID in the projects array */
 export function findProjectById(projectId) {
-  return projects.find((project) => project.id === projectId);
+  return projectsArray.find((project) => project.id === projectId);
 }
 
 /* Function to create a new project from a string and store it in the projects array */
 export function createAndStoreNewProject(projectName) {
   const newProject = new TodoProjectItem(projectName);
-  storeProjects(newProject);
+  storeProject(newProject);
 }
 
 /* Function to find the project object that is currently active in the DOM */
@@ -87,17 +87,22 @@ export function createAndStoreNewListItem() {
 }
 
 /* Function to change the  title of a list item if it is edited by the user */
-export function storeListItemName(event) {
+export function storeListItemTitle(event) {
   const sanitizedValue = sanitizeUserData(event.target.textContent);
-  const activeListItemId = getItemId(event.target.parentNode);
+  const activeListItemId = getElementId(event.target.parentNode);
   updateOrRemoveListItem(activeListItemId, sanitizedValue, event);
 }
 
-export function updateOrRemoveListItem(itemId, itemName, event) {
-  const activeListItem = findListItemById(itemId);
-  if (itemName !== "") {
-    activeListItem.title = itemName;
-  } else if (event.inputType !== "deleteContentBackward") {
+export function updateOrRemoveListItem(itemId, itemTitle, event) {
+  const listItem = findListItemById(itemId);
+  if (itemTitle !== "") {
+    listItem.title = itemTitle;
+  } else if (event.key === "Escape") {
+    listItem.resetTitle();
+  } else if (
+    event.inputType !== "deleteContentBackward" &&
+    event.inputType !== "deleteContentForward"
+  ) {
     removeListItemById(itemId);
   }
 }
@@ -113,5 +118,5 @@ export function removeListItemById(itemId) {
   const activeProject = getActiveProject();
   const itemIndex = activeProject.array.findIndex((item) => item.id === itemId);
   activeProject.array.splice(itemIndex, 1);
-  populateContent(activeProject);
+  updateContent(activeProject);
 }

@@ -22,3 +22,7 @@ export class TodoListItem {
     return TodoListItem.hiddenProperties.includes(property);
   }
 }
+
+TodoListItem.prototype.resetTitle = function () {
+  this.title = "New Task";
+};

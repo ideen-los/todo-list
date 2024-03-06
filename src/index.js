@@ -4,39 +4,40 @@ import {
   getContent,
   getProjectLinks,
   getListItems,
-  populateNav,
-  populateContent,
+  updateNav,
+  updateContent,
   addActiveClass,
   getDataProjectId,
   getListItemNameFieldById,
-  getItemId,
+  getElementId,
+  focusElementAndClearContent,
 } from "./dom";
 import {
   findProjectById,
   defaultProject,
   defaultProject2,
-  projects,
-  storeProjects,
+  projectsArray,
+  storeProject,
   createAndStoreNewProject,
   createAndStoreNewListItem,
-  storeListItemName,
+  storeListItemTitle,
   getActiveProject,
   updateOrRemoveListItem,
   findListItemById,
+  removeListItemById,
 } from "./data";
 
 /* EVENT LISTENER FUNCTIONS
 ####################################################################*/
-/* Add event listeners to project links, so a click displays 
-all list items associated with the respective project name  */
-function activateProjectLinks() {
+/* Show the associated project when a project link is clicked */
+function initializeProjectNavigation() {
   const nav = getNav();
   nav.addEventListener("click", (event) => {
     if (event.target.tagName === "A") {
       const projectId = getDataProjectId(event.target);
       const projectObject = findProjectById(projectId);
       addActiveClass(event.target);
-      populateContent(projectObject);
+      updateContent(projectObject);
     }
   });
 }
@@ -49,41 +50,37 @@ function activateProjectLinks() {
     if (event.key === "Enter" || event.keyCode === 13) {
       event.preventDefault();
       createAndStoreNewProject(input.value);
-      populateNav();
+      updateNav();
     }
   });
 })();
 
-/* Add event listener to the "New task" button */
-(function activateNewTaskButton() {
+/* Create a new List Item when "New Task" is clicked */
+(function initializeNewTaskButton() {
   const newTaskButton = document.querySelector(".add-task-item");
 
   newTaskButton.addEventListener("click", () => {
-    const activeProject = getActiveProject();
+    const activeProjectObject = getActiveProject();
     createAndStoreNewListItem();
-    populateContent(activeProject);
+    updateContent(activeProjectObject);
   });
 })();
 
-/* Add event listeners to the <div> that wraps all of the list items.
-"Input" so the editable name of currently the list item is stored. 
-Also "keydown" , so a new List item is created, whenever Enter is 
-pressed while a list items name is being edited */
-export function activateListItemNameField() {
+/* Make the title  */
+export function handleListItemTitleInteraction() {
   const content = getContent();
   const activeProject = getActiveProject();
 
   content.addEventListener("input", (event) => {
     if (event.target.matches(".list-item__name")) {
-      storeListItemName(event);
+      storeListItemTitle(event);
     }
   });
 
   content.addEventListener("focusout", (event) => {
     if (event.target.matches(".list-item__name")) {
-      const listItemId = getItemId(event.target.parentNode);
+      const listItemId = getElementId(event.target.parentNode);
       updateOrRemoveListItem(listItemId, event.target.textContent, event);
-      document.querySelector("body").focus();
     }
   });
 
@@ -91,16 +88,19 @@ export function activateListItemNameField() {
     if (event.target.matches(".list-item__name") && event.key === "Enter") {
       if (event.target.textContent !== "") {
         event.preventDefault();
-        const newListItemId = createAndStoreNewListItem();
-        populateContent(activeProject);
-        const newListItem = getListItemNameFieldById(newListItemId);
-        newListItem.focus();
-        newListItem.textContent = "";
+        const newListItemId = createAndStoreNewListItem(); // returns the new list item's id
+        updateContent(activeProject);
+        focusElementAndClearContent(newListItemId);
       } else {
-        const listItemId = getItemId(event.target.parentNode);
-        updateOrRemoveListItem(listItemId, event.target.textContent, event);
-        populateContent(activeProject);
+        const listItemId = getElementId(event.target.parentNode);
+        removeListItemById(listItemId);
+        updateContent(activeProject);
       }
+    }
+    if (event.target.matches(".list-item__name") && event.key === "Escape") {
+      const listItemId = getElementId(event.target.parentNode);
+      updateOrRemoveListItem(listItemId, event.target.textContent, event);
+      updateContent(activeProject);
     }
   });
 }
@@ -108,20 +108,20 @@ export function activateListItemNameField() {
 /* APP INITIALIZATION
 ####################################################################*/
 /* Push default data onto project array */
-storeProjects(defaultProject, defaultProject2);
+storeProject(defaultProject, defaultProject2);
 document.addEventListener("DOMContentLoaded", () => {
   /* Display the name of all projects in the <nav> section */
-  populateNav();
+  updateNav();
   /* Add class "active" to first project link in the project links array */
   addActiveClass(getProjectLinks()[0]);
   /* Add event listeners to the project names in the <nav> section so
   associated list items are revealed via click on the respective project name */
-  activateProjectLinks();
+  initializeProjectNavigation();
   /* Display all list items associated with the default project
   (the first project in the projects array) inside the content div */
-  populateContent(projects[0]);
-  /* Add event listeners "input" and "keydown" to the <div> "tasks-container"
-  to store any changes the user is making on the list items title and
-  add a new list item, when the user hits Enter */
-  activateListItemNameField();
+  updateContent(projectsArray[0]);
+  /* Add event listeners "input", "keydown" and "focusout" to the
+  .tasks-container and store any changes done by the user to the 
+  list items title */
+  handleListItemTitleInteraction();
 });
