@@ -1,4 +1,4 @@
-import { TodoListItem } from "./todoListItemClass";
+import { TodoItem } from "./todoItemClass";
 import { TodoProjectItem } from "./todoProjectClass";
 import {
   getProjectLinks,
@@ -8,14 +8,13 @@ import {
   getElementId,
   sanitizeUserData,
 } from "./dom";
-import DOMPurify from "dompurify";
 
 /* DEFAULT DATA CREATION
 ####################################################################*/
 /* Function to create a default project and todo item */
 function createDefaultElements() {
   const defaultProject = new TodoProjectItem("Default Project");
-  const defaultItem = new TodoListItem(
+  const defaultItem = new TodoItem(
     "1",
     "Default Task",
     "This is the default task",
@@ -30,7 +29,7 @@ function createDefaultElements() {
 /* Function to create a default project and todo item */
 function createDefaultElements2() {
   const defaultProject2 = new TodoProjectItem("Default Project2");
-  const defaultItem2 = new TodoListItem(
+  const defaultItem2 = new TodoItem(
     "2",
     "Default Task2",
     "This is the default task2",
@@ -76,47 +75,33 @@ export function getActiveProject() {
   return findProjectById(activeProjectId);
 }
 
-/* LIST ITEM DATA MANAGEMENT
+/* TODO ITEM DATA MANAGEMENT
 ####################################################################*/
-export function createAndStoreNewListItem() {
+export function createAndStoreNewTodoItem() {
   const activeProject = getActiveProject();
-  const newListItem = new TodoListItem(activeProject.id, "New Task");
-  activeProject.array.push(newListItem);
+  const newTodoItem = new TodoItem(activeProject.id, "New Task");
+  activeProject.array.push(newTodoItem);
 
-  return newListItem.id;
+  return newTodoItem.id;
 }
 
-/* Function to change the  title of a list item if it is edited by the user */
-export function storeListItemTitle(event) {
+/* Function to change the  title of a todo item if it is edited by the user */
+export function storeTodoItemTitle(event) {
   const sanitizedValue = sanitizeUserData(event.target.textContent);
-  const activeListItemId = getElementId(event.target.parentNode);
-  updateOrRemoveListItem(activeListItemId, sanitizedValue, event);
+  const activeTodoItemId = getElementId(event.target.parentNode);
+  const activeTodoItem = findTodoItemById(activeTodoItemId);
+  activeTodoItem.title = sanitizedValue;
 }
 
-export function updateOrRemoveListItem(itemId, itemTitle, event) {
-  const listItem = findListItemById(itemId);
-  if (itemTitle !== "") {
-    listItem.title = itemTitle;
-  } else if (event.key === "Escape") {
-    listItem.resetTitle();
-  } else if (
-    event.inputType !== "deleteContentBackward" &&
-    event.inputType !== "deleteContentForward"
-  ) {
-    removeListItemById(itemId);
-  }
-}
-
-/* Function to find a listItem by it's ID in the array of the active project */
-export function findListItemById(itemId) {
+/* Function to find a todo item by it's ID in the array of the active project */
+export function findTodoItemById(itemId) {
   const activeProject = getActiveProject();
   return activeProject.array.find((item) => item.id === itemId);
 }
 
-/* Function to remove a list item by it's ID from the array of the active project */
-export function removeListItemById(itemId) {
+/* Function to remove a todo item by it's ID from the array of the active project */
+export function removeTodoItemById(itemId) {
   const activeProject = getActiveProject();
   const itemIndex = activeProject.array.findIndex((item) => item.id === itemId);
   activeProject.array.splice(itemIndex, 1);
-  updateContent(activeProject);
 }

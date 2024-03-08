@@ -3,14 +3,17 @@ import {
   getNav,
   getContent,
   getProjectLinks,
-  getListItems,
+  getTodoItems,
   updateNav,
   updateContent,
   addActiveClass,
   getDataProjectId,
-  getListItemNameFieldById,
+  getTodoItemNameFieldById,
   getElementId,
   focusElementAndClearContent,
+  isTodoItemTitle,
+  isTextContentEmpty,
+  isProjectLink,
 } from "./dom";
 import {
   findProjectById,
@@ -19,109 +22,144 @@ import {
   projectsArray,
   storeProject,
   createAndStoreNewProject,
-  createAndStoreNewListItem,
-  storeListItemTitle,
+  createAndStoreNewTodoItem,
+  storeTodoItemTitle,
   getActiveProject,
-  updateOrRemoveListItem,
-  findListItemById,
-  removeListItemById,
+  resetOrRemoveTodoItem,
+  findTodoItemById,
+  removeTodoItemById,
 } from "./data";
 
-/* EVENT LISTENER FUNCTIONS
+/* USER INTERACTION
 ####################################################################*/
-/* Show the associated project when a project link is clicked */
+// Returns a project from the projects array by searching for it's ID retrieved from the project's link
 function initializeProjectNavigation() {
   const nav = getNav();
+
   nav.addEventListener("click", (event) => {
-    if (event.target.tagName === "A") {
-      const projectId = getDataProjectId(event.target);
-      const projectObject = findProjectById(projectId);
+    const projectId = getDataProjectId(event.target);
+    const activeProject = findProjectById(projectId);
+
+    if (isProjectLink(event)) {
       addActiveClass(event.target);
-      updateContent(projectObject);
+      updateContent(activeProject);
     }
   });
 }
 
-/* Add event listener to input that lets user enter a new project name */
 (function getNewProjectFromInputField() {
   const input = document.querySelector(".input-wrapper input");
 
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.keyCode === 13) {
       event.preventDefault();
+
       createAndStoreNewProject(input.value);
       updateNav();
     }
   });
 })();
 
-/* Create a new List Item when "New Task" is clicked */
+// Creates a new todo item when the button "New Task" is clicked
 (function initializeNewTaskButton() {
   const newTaskButton = document.querySelector(".add-task-item");
 
   newTaskButton.addEventListener("click", () => {
-    const activeProjectObject = getActiveProject();
-    createAndStoreNewListItem();
-    updateContent(activeProjectObject);
+    const activeProject = getActiveProject();
+
+    createAndStoreNewTodoItem();
+    updateContent(activeProject);
   });
 })();
 
-/* Make the title  */
-export function handleListItemTitleInteraction() {
+// Handles user interaction with a todo item's title
+function handleTodoItemTitleInteraction() {
   const content = getContent();
-  const activeProject = getActiveProject();
 
+  /* 
+  Listens for and stores updates to the todo item's title by the user.
+  Several keys/actions are excluded -> see below. 
+  */
   content.addEventListener("input", (event) => {
-    if (event.target.matches(".list-item__name")) {
-      storeListItemTitle(event);
+    if (isTodoItemTitle(event)) {
+      storeTodoItemTitle(event);
     }
   });
 
+  // Updates a todo item's title when it loses focus. Removes it when empty.
   content.addEventListener("focusout", (event) => {
-    if (event.target.matches(".list-item__name")) {
-      const listItemId = getElementId(event.target.parentNode);
-      updateOrRemoveListItem(listItemId, event.target.textContent, event);
-    }
-  });
+    const activeProject = getActiveProject();
+    const todoItemId = getElementId(event.target.parentNode);
 
-  content.addEventListener("keydown", (event) => {
-    if (event.target.matches(".list-item__name") && event.key === "Enter") {
-      if (event.target.textContent !== "") {
-        event.preventDefault();
-        const newListItemId = createAndStoreNewListItem(); // returns the new list item's id
+    if (isTodoItemTitle(event)) {
+      if (isTextContentEmpty(event)) {
+        removeTodoItemById(todoItemId);
         updateContent(activeProject);
-        focusElementAndClearContent(newListItemId);
       } else {
-        const listItemId = getElementId(event.target.parentNode);
-        removeListItemById(listItemId);
-        updateContent(activeProject);
+        storeTodoItemTitle(event);
       }
     }
-    if (event.target.matches(".list-item__name") && event.key === "Escape") {
-      const listItemId = getElementId(event.target.parentNode);
-      updateOrRemoveListItem(listItemId, event.target.textContent, event);
-      updateContent(activeProject);
+  });
+
+  /*
+  Creates a new todo item when ENTER is pressed. Removes it when the title is empty.
+  If the user deletes the title by pressing DEL or BACKSPACE, the item won't be removed.
+  */
+  content.addEventListener("keydown", (event) => {
+    const activeProject = getActiveProject();
+    const todoItemId = getElementId(event.target.parentNode);
+    const body = document.querySelector("body");
+
+    if (isTodoItemTitle(event) && event.key === "Enter") {
+      if (isTextContentEmpty(event)) {
+        if (
+          event.inputType !== "deleteContentBackward" &&
+          event.inputType !== "deleteContentForward"
+        ) {
+          removeTodoItemById(todoItemId);
+          updateContent(activeProject);
+        } else {
+          removeTodoItemById(todoItemId);
+          updateContent(activeProject);
+        }
+      } else {
+        event.preventDefault();
+
+        const newTodoItemId = createAndStoreNewTodoItem(); // returns the new todo item's id
+        updateContent(activeProject);
+        focusElementAndClearContent(newTodoItemId);
+      }
+    }
+    // Updates a todo item's title when ESCAPE is pressed. Resets it to the default when empty.
+    if (isTodoItemTitle(event) && event.key === "Escape") {
+      const activeProject = getActiveProject();
+      const todoItemId = getElementId(event.target.parentNode);
+      const todoItem = findTodoItemById(todoItemId);
+
+      if (isTextContentEmpty(event)) {
+        todoItem.resetTitle();
+        updateContent(activeProject);
+      } else {
+        storeTodoItemTitle(event);
+        body.focus();
+      }
     }
   });
 }
 
 /* APP INITIALIZATION
 ####################################################################*/
-/* Push default data onto project array */
+// Pushes default data onto the projects array
 storeProject(defaultProject, defaultProject2);
 document.addEventListener("DOMContentLoaded", () => {
-  /* Display the name of all projects in the <nav> section */
+  // Displays the title of all stored projects in the <nav> as links
   updateNav();
-  /* Add class "active" to first project link in the project links array */
+  // Adds the class "active" to first project link
   addActiveClass(getProjectLinks()[0]);
-  /* Add event listeners to the project names in the <nav> section so
-  associated list items are revealed via click on the respective project name */
+  // Adds event listeners to the project links
   initializeProjectNavigation();
-  /* Display all list items associated with the default project
-  (the first project in the projects array) inside the content div */
+  // Populate content with the default todo items
   updateContent(projectsArray[0]);
-  /* Add event listeners "input", "keydown" and "focusout" to the
-  .tasks-container and store any changes done by the user to the 
-  list items title */
-  handleListItemTitleInteraction();
+  // Handles updates to the todo item title
+  handleTodoItemTitleInteraction();
 });

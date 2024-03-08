@@ -16,7 +16,7 @@ export function getProjectLinks() {
 export function getContentHeadline() {
   return document.querySelector("h1");
 }
-export function getListItems() {
+export function getTodoItems() {
   const content = getContent();
   return content.querySelectorAll(".list-item");
 }
@@ -35,7 +35,7 @@ export function updateNav() {
   });
 }
 
-/* Function to display all list items associated with a project inside the content section.
+/* Function to display all todo items associated with a project inside the content section.
 The items are all wrapped in a <div>, while the items properties are wrapped in a <span> */
 export function updateContent(project) {
   const content = getContent();
@@ -43,28 +43,28 @@ export function updateContent(project) {
   updateContentHeadline();
 
   if (project.array.length > 0) {
-    project.array.forEach((listItem) => {
-      let listItemWrapper = createListItemContainer(listItem);
+    project.array.forEach((todoItem) => {
+      let todoItemWrapper = createTodoItemContainer(todoItem);
 
-      for (let key in listItem) {
+      for (let key in todoItem) {
         /* Check if the key belongs to the list item and not to the prototype
         and if the key is not part of the isHiddenProperty array */
-        if (listItem.hasOwnProperty(key) && !listItem.isHiddenProperty(key)) {
+        if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
           if (key !== "title") {
             /* Wrap all property values of list items in a HTML <span> tag */
-            let listItemKeyWrapper = document.createElement("span");
-            listItemKeyWrapper.textContent = listItem[key];
-            listItemWrapper.appendChild(listItemKeyWrapper);
+            let todoItemKeyWrapper = document.createElement("span");
+            todoItemKeyWrapper.textContent = todoItem[key];
+            todoItemWrapper.appendChild(todoItemKeyWrapper);
           } else {
             /* Wrap the title value in a special editable <div> */
-            let listItemTitleWrapper = createListItemTitleWrapper();
-            listItemTitleWrapper.textContent = listItem[key];
-            listItemWrapper.appendChild(listItemTitleWrapper);
+            let todoItemTitleWrapper = createTodoItemTitleWrapper();
+            todoItemTitleWrapper.textContent = todoItem[key];
+            todoItemWrapper.appendChild(todoItemTitleWrapper);
           }
         }
       }
 
-      content.appendChild(listItemWrapper);
+      content.appendChild(todoItemWrapper);
     });
   }
 }
@@ -82,18 +82,18 @@ function createHyperlink(project) {
 }
 
 /* Function to streamline the creation divs that wrap the list items */
-function createListItemContainer(listItem) {
+function createTodoItemContainer(todoItem) {
   let wrapper = document.createElement("div");
-  wrapper.classList.add("list-item");
-  wrapper.setAttribute("data-project-id", listItem.projectId);
-  wrapper.id = listItem.id;
+  wrapper.classList.add("todo-item");
+  wrapper.setAttribute("data-project-id", todoItem.projectId);
+  wrapper.id = todoItem.id;
 
   return wrapper;
 }
 
-function createListItemTitleWrapper() {
+function createTodoItemTitleWrapper() {
   const titleWrapper = document.createElement("div");
-  titleWrapper.classList.add("list-item__name");
+  titleWrapper.classList.add("todo-item__name");
   titleWrapper.contentEditable = "true";
   titleWrapper.tabIndex = "1";
 
@@ -124,9 +124,9 @@ export function updateContentHeadline() {
 }
 
 export function focusElementAndClearContent(id) {
-  const newListItem = getListItemNameFieldById(id);
-  newListItem.focus();
-  newListItem.textContent = "";
+  const newTodoItem = getTodoItemNameFieldById(id);
+  newTodoItem.focus();
+  newTodoItem.textContent = "";
 }
 
 /* DOM ELEMENT DATA RETRIEVAL
@@ -142,9 +142,9 @@ export function getElementId(htmlElement) {
 }
 
 /* Function to retrieve an html element by its id */
-export function getListItemNameFieldById(id) {
-  const listItem = document.getElementById(id);
-  return listItem.querySelector(".list-item__name");
+export function getTodoItemNameFieldById(id) {
+  const todoItem = document.getElementById(id);
+  return todoItem.querySelector(".todo-item__name");
 }
 
 /* Function to retrieve the data-project-id from a 
@@ -160,6 +160,18 @@ export function findActiveProjectId() {
   });
 
   return activeProjectId;
+}
+
+export function isTodoItemTitle(event) {
+  return event.target.matches(".todo-item__name");
+}
+
+export function isProjectLink(event) {
+  return event.target.matches("a");
+}
+
+export function isTextContentEmpty(event) {
+  return event.target.textContent === "";
 }
 
 /* DATA INPUT

@@ -1,4 +1,4 @@
-export class TodoListItem {
+export class TodoItem {
   static hiddenProperties = ["projectId", "id"]; // Define property, that should not be visible to the public
   static globalId = 0;
 
@@ -14,15 +14,15 @@ export class TodoListItem {
     this.description = description;
     this.dueDate = dueDate;
     this.priority = priority;
-    TodoListItem.globalId += 1;
-    this.id = TodoListItem.globalId.toString();
+    TodoItem.globalId += 1;
+    this.id = TodoItem.globalId.toString();
   }
 
   isHiddenProperty(property) {
-    return TodoListItem.hiddenProperties.includes(property);
+    return TodoItem.hiddenProperties.includes(property);
   }
 }
 
-TodoListItem.prototype.resetTitle = function () {
+TodoItem.prototype.resetTitle = function () {
   this.title = "New Task";
 };
