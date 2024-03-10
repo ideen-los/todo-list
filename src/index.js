@@ -39,16 +39,18 @@ import {
 /* USER INTERACTION
 ####################################################################*/
 /* 
-Returns a specific project from the projects array by searching for it's ID.
-The ID is retrieved from a link that references a project object by it's name property. */
+Activates a project. 
+Returns it from projectsArray[] by looking up it's ID.
+It's retrieved from a <div> referencing the project name.
+*/
 function initializeProjectNavigation() {
   const nav = getNav();
 
   nav.addEventListener("click", (event) => {
     if (isProjectLink(event)) {
       const projectLink = event.target;
-      const id = getDataProjectId(projectLink);
-      const activeProject = findProjectById(id);
+      const projectId = getDataProjectId(projectLink);
+      const activeProject = findProjectById(projectId);
 
       addActiveClass(projectLink);
       updateContent(activeProject);
@@ -56,14 +58,14 @@ function initializeProjectNavigation() {
   });
 }
 
-// Manages user interaction with a project's name property represented by a link in the navigation on the left
+// Manages user interaction/updates to project name
 function handleProjectNameInteraction() {
   const nav = getNav();
 
   /* 
-  Adds and removes classes on a span and input field when a user clicks on the span which wraps a the project's name.
-  If the project is not active, a click will only activate the project (handled in initializeProjectNavigation()).
-  This is because the span element is set to pointer-events: none as long as a project link doesn't have the "active" class.
+  Hides name field & shows input when a project name is clicked & project is active.
+  If not active, a click will activate the project (handled by initializeProjectNavigation()).
+  The <span> that wraps the project name has "pointer-events: none" while the project is not active.
   */
   nav.addEventListener("click", (event) => {
     const allProjectLinks = getProjectLinks();
@@ -72,7 +74,7 @@ function handleProjectNameInteraction() {
       const projectLink = event.target;
 
       allProjectLinks.forEach((link) => {
-        // Revert all links except the one the event happened on to their original state
+        // Hides name & shows input field of any project other than event.target
         if (link !== projectLink) {
           const name = link.querySelector("span");
           const input = link.querySelector("input");
@@ -89,8 +91,7 @@ function handleProjectNameInteraction() {
   });
 
   /* 
-  Updates the name of the project wrapped by a span tag in real-time when the user edits the name input field.
-  Every change is stored in the name property of the project object.
+  Stores & updates a project name when a user updates the input field.
   */
   nav.addEventListener("input", (event) => {
     if (isProjectInput(event)) {
@@ -100,8 +101,8 @@ function handleProjectNameInteraction() {
   });
 
   /* 
-  Hides the name input field when the user focus another element on the page. 
-  Also updates the content to the right hand side, to reflect any changes done to the project's name.
+  Hides the input field when the focus is lost. 
+  Updates the right hand side content, to reflect any possible updates to the name.
   */
   nav.addEventListener("focusout", (event) => {
     if (isProjectInput(event)) {
@@ -113,7 +114,7 @@ function handleProjectNameInteraction() {
   });
 
   /* 
-  Provides the exact same functionality as the code block above but for the Escape & Enter key.
+  Same functionality as above for Escape & Enter key.
   */
   nav.addEventListener("keydown", (event) => {
     if (
@@ -128,7 +129,7 @@ function handleProjectNameInteraction() {
   });
 }
 
-// Creates a new todo item when the button "Add Task" is clicked
+// Creates new todo item via click on "Add Task"
 (function initializeNewTaskButton() {
   const newTaskButton = getNewTaskButton();
 
@@ -140,7 +141,7 @@ function handleProjectNameInteraction() {
   });
 })();
 
-// Creates a new project when the button "New Project" is clicked
+// Creates new project via click on "New Project"
 (function initializeNewProjectButton() {
   const newProjectButton = getNewProjectButton();
 
@@ -150,13 +151,13 @@ function handleProjectNameInteraction() {
   });
 })();
 
-// Manages user interaction with a todo item's title
+// Manages user interaction with a todo item title
 function handleTodoItemTitleInteraction() {
   const content = getContent();
 
   /* 
-  Listens for and stores updates to the todo item's title by the user.
-  Several keys/actions are excluded -> see below. 
+  Stores updates to a todo item title.
+  Exceptions: "Enter" & "Escape" -> see below. 
   */
   content.addEventListener("input", (event) => {
     if (isTodoItemTitle(event)) {
@@ -164,7 +165,7 @@ function handleTodoItemTitleInteraction() {
     }
   });
 
-  // Updates a todo item's title when it loses focus. Removes it when empty.
+  // Updates a todo item title when the focus is lost. Removes it when title is empty.
   content.addEventListener("focusout", (event) => {
     const activeProject = getActiveProject();
     const todoItemId = getElementId(event.target.parentNode);
@@ -177,7 +178,7 @@ function handleTodoItemTitleInteraction() {
     }
   });
 
-  // Creates a new todo item when ENTER is pressed. Removes it when the title is empty.
+  // Creates new todo item when ENTER is pressed. Removes it when title is empty.
   content.addEventListener("keydown", (event) => {
     const body = document.querySelector("body");
     const activeProject = getActiveProject();
@@ -190,13 +191,13 @@ function handleTodoItemTitleInteraction() {
       } else {
         event.preventDefault();
 
-        const newTodoItemId = createAndStoreNewTodoItem(); // returns the new todo item's id
+        const newTodoItemId = createAndStoreNewTodoItem(); // returns the new item's id
         updateContent(activeProject);
         focusElementAndClearContent(newTodoItemId);
       }
     }
 
-    // Updates a todo item's title when ESCAPE is pressed. Resets it to the default when empty.
+    // Focuses <body> when ESCAPE is pressed. Resets the title to the default value when empty.
     if (isTodoItemTitle(event) && event.key === "Escape") {
       const activeProject = getActiveProject();
       const todoItem = findTodoItemById(todoItemId);
@@ -214,18 +215,19 @@ function handleTodoItemTitleInteraction() {
 
 /* APP INITIALIZATION
 ####################################################################*/
-// Pushes default data onto the projects array
+// Pushes default data onto projectsArray[]
 storeProject(defaultProject, defaultProject2);
 document.addEventListener("DOMContentLoaded", () => {
-  // Displays the title of all stored projects in the <nav> as links
+  // Displays the name of all projects from projectsArray[]
   updateNav();
-  // Adds the class "active" to first project link
+  // Marks the first project as active
   addActiveClass(getProjectLinks()[0]);
-  // Adds event listeners to the project links
+  // Associates the project names with the actual poject objects
   initializeProjectNavigation();
-  // Populate content with the default todo items
+  // Displays all todo items from the first project
   updateContent(projectsArray[0]);
-  // Handles updates to the todo item title
+  // Handles updates of todo item title by the user
   handleTodoItemTitleInteraction();
+  // Handles updates of project name by the user
   handleProjectNameInteraction();
 });
