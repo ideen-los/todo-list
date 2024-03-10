@@ -75,6 +75,12 @@ export function getActiveProject() {
   return findProjectById(activeProjectId);
 }
 
+export function storeProjectName(event) {
+  const sanitizedValue = sanitizeUserData(event.target.value);
+  const activeProject = getActiveProject();
+  activeProject.name = sanitizedValue;
+}
+
 /* TODO ITEM DATA MANAGEMENT
 ####################################################################*/
 export function createAndStoreNewTodoItem() {
