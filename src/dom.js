@@ -166,6 +166,15 @@ export function focusElementAndClearContent(id) {
   newTodoItem.textContent = "";
 }
 
+// Gets the value from the project name input field, sanitizes it and sets it as textContent for the projects name
+export function updateProjectName(event) {
+  const projectLink = event.target.parentNode;
+  const name = projectLink.querySelector("span");
+  const sanitizedValue = sanitizeUserData(event.target.value);
+
+  name.textContent = sanitizedValue;
+}
+
 /* DOM ELEMENT DATA RETRIEVAL
 ####################################################################*/
 // Retrieves the data-project-id attribute from an element
@@ -205,7 +214,15 @@ export function isTodoItemTitle(event) {
 
 // Checks if an event happened on .project-item or a child of .project-item
 export function isProjectLink(event) {
-  return event.target.closest(".project-item");
+  return event.target.matches(".project-item");
+}
+
+export function isProjectName(event) {
+  return event.target.matches(".project-item span");
+}
+
+export function isProjectInput(event) {
+  return event.target.matches(".project-item input");
 }
 
 // Checks if the textContent of an element is empty

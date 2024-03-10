@@ -15,6 +15,9 @@ import {
   getNewTaskButton,
   getNewProjectButton,
   isProjectLink,
+  isProjectName,
+  isProjectInput,
+  updateProjectName,
 } from "./dom";
 import {
   findProjectById,
@@ -28,6 +31,7 @@ import {
   getActiveProject,
   findTodoItemById,
   removeTodoItemById,
+  storeProjectName,
 } from "./data";
 
 /* USER INTERACTION
@@ -39,11 +43,11 @@ function initializeProjectNavigation() {
   const nav = getNav();
 
   nav.addEventListener("click", (event) => {
-    const projectLink = isProjectLink(event);
-    const projectId = getDataProjectId(projectLink);
-    const activeProject = findProjectById(projectId);
+    if (isProjectLink(event)) {
+      const projectLink = event.target;
+      const id = getDataProjectId(projectLink);
+      const activeProject = findProjectById(id);
 
-    if (projectLink) {
       addActiveClass(projectLink);
       updateContent(activeProject);
     }
@@ -60,33 +64,51 @@ function handleProjectNameInteraction() {
   This is because the span element is set to pointer-events: none as long as a project link doesn't have the "active" class.
   */
   nav.addEventListener("click", (event) => {
-    const projectLink = isProjectLink(event);
-    const name = isProjectLink(event).querySelector("span");
-    const input = isProjectLink(event).querySelector("input");
-    const projectLinks = getProjectLinks();
+    const allProjectLinks = getProjectLinks();
 
-    if (projectLink) {
-      projectLinks.forEach((link) => {
+    if (isProjectLink(event)) {
+      const projectLink = event.target;
+
+      allProjectLinks.forEach((link) => {
+        // Revert all links except the one the event happened on to their original state
         if (link !== projectLink) {
-          console.log("event target = projectlink");
+          const name = link.querySelector("span");
+          const input = link.querySelector("input");
+
           name.classList.remove("hide");
           input.classList.add("hide");
         }
       });
     }
 
-    if (event.target === name) {
-      console.log("event target = name");
+    if (isProjectName(event)) {
+      const projectLink = event.target.parentNode;
+      const name = projectLink.querySelector("span");
+      const input = projectLink.querySelector("input");
+
       name.classList.add("hide");
       input.classList.remove("hide");
-    }
-
-    if (event.target === input) {
+      input.select();
     }
   });
 
-  nav.addEventListener("keydown", (event) => {
-    if (event.target === input && event.key === "Enter") {
+  nav.addEventListener("input", (event) => {
+    if (isProjectInput(event)) {
+      storeProjectName(event);
+      updateProjectName(event);
+    }
+  });
+
+  nav.addEventListener("focusout", (event) => {
+    if (isProjectInput(event)) {
+      const activeProject = getActiveProject();
+      const projectLink = event.target.parentNode;
+      const name = projectLink.querySelector("span");
+      const input = projectLink.querySelector("input");
+
+      name.classList.remove("hide");
+      input.classList.add("hide");
+      updateContent(activeProject);
     }
   });
 }
@@ -122,9 +144,7 @@ function handleTodoItemTitleInteraction() {
   Several keys/actions are excluded -> see below. 
   */
   content.addEventListener("input", (event) => {
-    const todoItemTitle = isTodoItemTitle(event);
-
-    if (todoItemTitle) {
+    if (isTodoItemTitle(event)) {
       storeTodoItemTitle(event);
     }
   });
@@ -132,17 +152,13 @@ function handleTodoItemTitleInteraction() {
   // Updates a todo item's title when it loses focus. Removes it when empty.
   content.addEventListener("focusout", (event) => {
     const activeProject = getActiveProject();
-    const todoItemTitle = isTodoItemTitle(event);
     const todoItemId = getElementId(event.target.parentNode);
-    const textContentEmpty = isTextContentEmpty(event);
 
-    if (todoItemTitle) {
-      if (textContentEmpty) {
-        removeTodoItemById(todoItemId);
-        updateContent(activeProject);
-      } else {
-        storeTodoItemTitle(event);
-      }
+    if (isTodoItemTitle(event) && isTextContentEmpty(event)) {
+      removeTodoItemById(todoItemId);
+      updateContent(activeProject);
+    } else {
+      storeTodoItemTitle(event);
     }
   });
 
@@ -150,12 +166,10 @@ function handleTodoItemTitleInteraction() {
   content.addEventListener("keydown", (event) => {
     const body = document.querySelector("body");
     const activeProject = getActiveProject();
-    const todoItemTitle = isTodoItemTitle(event);
     const todoItemId = getElementId(event.target.parentNode);
-    const textContentEmpty = isTextContentEmpty(event);
 
-    if (todoItemTitle && event.key === "Enter") {
-      if (textContentEmpty) {
+    if (isTodoItemTitle(event) && event.key === "Enter") {
+      if (isTextContentEmpty(event)) {
         removeTodoItemById(todoItemId);
         updateContent(activeProject);
       } else {
@@ -168,12 +182,11 @@ function handleTodoItemTitleInteraction() {
     }
 
     // Updates a todo item's title when ESCAPE is pressed. Resets it to the default when empty.
-    if (todoItemTitle && event.key === "Escape") {
+    if (isTodoItemTitle(event) && event.key === "Escape") {
       const activeProject = getActiveProject();
-      const todoItemId = getElementId(event.target.parentNode);
       const todoItem = findTodoItemById(todoItemId);
 
-      if (textContentEmpty) {
+      if (isTextContentEmpty(event)) {
         todoItem.resetTitle();
         updateContent(activeProject);
       } else {

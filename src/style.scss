@@ -14,17 +14,25 @@ aside {
   max-width: 300px;
 
   .project-item {
-    display: block;
+    display: flex;
     cursor: pointer;
     margin: 0.5rem;
     padding: 0.5rem 1rem;
     background-color: #eee;
     border-radius: 12px;
 
+    &.active {
+      background-color: burlywood;
+    }
+
     &:not(.active) {
       span {
         pointer-events: none;
       }
+    }
+
+    input {
+      width: 100%;
     }
 
     .hide {
