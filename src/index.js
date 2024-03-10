@@ -18,6 +18,8 @@ import {
   isProjectName,
   isProjectInput,
   updateProjectName,
+  hideProjectInputField,
+  showProjectInputField,
 } from "./dom";
 import {
   findProjectById,
@@ -82,16 +84,14 @@ function handleProjectNameInteraction() {
     }
 
     if (isProjectName(event)) {
-      const projectLink = event.target.parentNode;
-      const name = projectLink.querySelector("span");
-      const input = projectLink.querySelector("input");
-
-      name.classList.add("hide");
-      input.classList.remove("hide");
-      input.select();
+      showProjectInputField(event);
     }
   });
 
+  /* 
+  Updates the name of the project wrapped by a span tag in real-time when the user edits the name input field.
+  Every change is stored in the name property of the project object.
+  */
   nav.addEventListener("input", (event) => {
     if (isProjectInput(event)) {
       storeProjectName(event);
@@ -99,15 +99,30 @@ function handleProjectNameInteraction() {
     }
   });
 
+  /* 
+  Hides the name input field when the user focus another element on the page. 
+  Also updates the content to the right hand side, to reflect any changes done to the project's name.
+  */
   nav.addEventListener("focusout", (event) => {
     if (isProjectInput(event)) {
       const activeProject = getActiveProject();
-      const projectLink = event.target.parentNode;
-      const name = projectLink.querySelector("span");
-      const input = projectLink.querySelector("input");
 
-      name.classList.remove("hide");
-      input.classList.add("hide");
+      hideProjectInputField(event);
+      updateContent(activeProject);
+    }
+  });
+
+  /* 
+  Provides the exact same functionality as the code block above but for the Escape & Enter key.
+  */
+  nav.addEventListener("keydown", (event) => {
+    if (
+      isProjectInput(event) &&
+      (event.key === "Escape" || event.key === "Enter")
+    ) {
+      const activeProject = getActiveProject();
+
+      hideProjectInputField(event);
       updateContent(activeProject);
     }
   });

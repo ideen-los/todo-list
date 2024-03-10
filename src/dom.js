@@ -207,6 +207,34 @@ export function findActiveProjectId() {
   return activeProjectId;
 }
 
+/* 
+Removes the class "hide" from the project name input field, making it visible.
+Adds the class "hide" to the project'S name wrapping span at the same time.
+Finnally selects the text inside the input field for convenience.
+*/
+export function showProjectInputField(event) {
+  const projectLink = event.target.parentNode;
+  const name = projectLink.querySelector("span");
+  const input = projectLink.querySelector("input");
+
+  name.classList.add("hide");
+  input.classList.remove("hide");
+  input.select();
+}
+
+/* 
+Adds the class "hide" to the project name input field, thus hiding it from display.
+Removes the class "hide" from the project's name wrapping span at the same time.
+*/
+export function hideProjectInputField(event) {
+  const projectLink = event.target.parentNode;
+  const name = projectLink.querySelector("span");
+  const input = projectLink.querySelector("input");
+
+  name.classList.remove("hide");
+  input.classList.add("hide");
+}
+
 // Checks if an event happened on the title of a todo item
 export function isTodoItemTitle(event) {
   return event.target.matches(".todo-item__name");
