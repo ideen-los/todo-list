@@ -67,7 +67,7 @@ export function refreshContent(project) {
 
       for (let key in todoItem) {
         /* 
-        Checks if the key belongs to the respective item's instance (not to the prototype).
+        Checks if the key belongs to the item's instance and renders it in the DOM.
         It also checks if the key is not part of the isHiddenProperty array.
         */
         if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
@@ -79,6 +79,11 @@ export function refreshContent(project) {
             const todoItemTitleWrapper = createTodoItemTitleWrapper();
             todoItemTitleWrapper.textContent = todoItem[key];
             todoItemContainer.appendChild(todoItemTitleWrapper);
+          }
+          // Checks if a todo item has been marked as complete
+        } else if (key === "checked") {
+          if (todoItem[key] === "true") {
+            todoItemContainer.classList.add("checked");
           }
         }
       }

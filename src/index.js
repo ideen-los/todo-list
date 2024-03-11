@@ -223,11 +223,15 @@ function handleTodoItemCheckComplete() {
 
     if (event.target.matches(".todo-item .checkmark-container .checkmark")) {
       const todoItemId = getElementId(event.target.parentNode.parentNode);
+      const todoItem = findTodoItemById(todoItemId);
+
+      // Mark as complete so checkbox will stay checked when content is refreshed
+      todoItem.checked = "true";
 
       setTimeout(function () {
         removeTodoItemById(todoItemId);
         refreshContent(activeProject);
-      }, 1000);
+      }, 2000);
     }
   });
 }
