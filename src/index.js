@@ -3,8 +3,8 @@ import {
   getNav,
   getContent,
   getProjectLinks,
-  updateNav,
-  updateContent,
+  refreshNav,
+  refreshContent,
   addActiveClass,
   getDataProjectId,
   getTodoItemNameFieldById,
@@ -53,7 +53,7 @@ function initializeProjectNavigation() {
       const activeProject = findProjectById(projectId);
 
       addActiveClass(projectLink);
-      updateContent(activeProject);
+      refreshContent(activeProject);
     }
   });
 }
@@ -109,7 +109,7 @@ function handleProjectNameInteraction() {
       const activeProject = getActiveProject();
 
       hideProjectInputField(event);
-      updateContent(activeProject);
+      refreshContent(activeProject);
     }
   });
 
@@ -124,7 +124,7 @@ function handleProjectNameInteraction() {
       const activeProject = getActiveProject();
 
       hideProjectInputField(event);
-      updateContent(activeProject);
+      refreshContent(activeProject);
     }
   });
 }
@@ -137,7 +137,7 @@ function handleProjectNameInteraction() {
     const activeProject = getActiveProject();
 
     createAndStoreNewTodoItem();
-    updateContent(activeProject);
+    refreshContent(activeProject);
   });
 })();
 
@@ -147,7 +147,7 @@ function handleProjectNameInteraction() {
 
   newProjectButton.addEventListener("click", () => {
     createAndStoreNewProject();
-    updateNav();
+    refreshNav();
   });
 })();
 
@@ -170,11 +170,13 @@ function handleTodoItemTitleInteraction() {
     const activeProject = getActiveProject();
     const todoItemId = getElementId(event.target.parentNode);
 
-    if (isTodoItemTitle(event) && isTextContentEmpty(event)) {
-      removeTodoItemById(todoItemId);
-      updateContent(activeProject);
-    } else {
-      storeTodoItemTitle(event);
+    if (isTodoItemTitle(event)) {
+      if (isTextContentEmpty(event)) {
+        removeTodoItemById(todoItemId);
+        refreshContent(activeProject);
+      } else {
+        storeTodoItemTitle(event);
+      }
     }
   });
 
@@ -187,12 +189,12 @@ function handleTodoItemTitleInteraction() {
     if (isTodoItemTitle(event) && event.key === "Enter") {
       if (isTextContentEmpty(event)) {
         removeTodoItemById(todoItemId);
-        updateContent(activeProject);
+        refreshContent(activeProject);
       } else {
         event.preventDefault();
 
         const newTodoItemId = createAndStoreNewTodoItem(); // returns the new item's id
-        updateContent(activeProject);
+        refreshContent(activeProject);
         focusElementAndClearContent(newTodoItemId);
       }
     }
@@ -204,11 +206,28 @@ function handleTodoItemTitleInteraction() {
 
       if (isTextContentEmpty(event)) {
         todoItem.resetTitle();
-        updateContent(activeProject);
+        refreshContent(activeProject);
       } else {
         storeTodoItemTitle(event);
         body.focus();
       }
+    }
+  });
+}
+
+function handleTodoItemCheckComplete() {
+  const content = getContent();
+
+  content.addEventListener("click", (event) => {
+    const activeProject = getActiveProject();
+
+    if (event.target.matches(".todo-item .checkmark-container .checkmark")) {
+      const todoItemId = getElementId(event.target.parentNode.parentNode);
+
+      setTimeout(function () {
+        removeTodoItemById(todoItemId);
+        refreshContent(activeProject);
+      }, 1000);
     }
   });
 }
@@ -219,15 +238,16 @@ function handleTodoItemTitleInteraction() {
 storeProject(defaultProject, defaultProject2);
 document.addEventListener("DOMContentLoaded", () => {
   // Displays the name of all projects from projectsArray[]
-  updateNav();
+  refreshNav();
   // Marks the first project as active
   addActiveClass(getProjectLinks()[0]);
   // Associates the project names with the actual poject objects
   initializeProjectNavigation();
   // Displays all todo items from the first project
-  updateContent(projectsArray[0]);
-  // Handles updates of todo item title by the user
-  handleTodoItemTitleInteraction();
+  refreshContent(projectsArray[0]);
   // Handles updates of project name by the user
   handleProjectNameInteraction();
+  // Handles updates of todo item title by the user
+  handleTodoItemTitleInteraction();
+  handleTodoItemCheckComplete();
 });

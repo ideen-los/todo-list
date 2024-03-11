@@ -33,7 +33,7 @@ export function getNewProjectButton() {
 Accesses the projects array, wraps all properties in a div container and appends it to the <nav>.
 The name property of all projects is wrapped in a span tag and an input field. Those are appended to the container.
 */
-export function updateNav() {
+export function refreshNav() {
   const nav = getNav();
   nav.innerHTML = "";
 
@@ -53,14 +53,17 @@ Displays all todo items associated with a project object inside the content sect
 All properties are wrapped in a div container.
 The individual properties are wrapped in a span tag and appended to the container
 */
-export function updateContent(project) {
+export function refreshContent(project) {
   const content = getContent();
   content.innerHTML = "";
   updateContentHeadline();
 
   if (project.array.length > 0) {
     project.array.forEach((todoItem) => {
-      let todoItemContainer = createTodoItemContainer(todoItem);
+      const todoItemContainer = createTodoItemContainer(todoItem);
+      const todoItemCheckComplete = createTodoItemCheckComplete();
+
+      todoItemContainer.appendChild(todoItemCheckComplete);
 
       for (let key in todoItem) {
         /* 
@@ -69,11 +72,11 @@ export function updateContent(project) {
         */
         if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
           if (key !== "title") {
-            let todoItemKeyWrapper = document.createElement("span");
+            const todoItemKeyWrapper = document.createElement("span");
             todoItemKeyWrapper.textContent = todoItem[key];
             todoItemContainer.appendChild(todoItemKeyWrapper);
           } else {
-            let todoItemTitleWrapper = createTodoItemTitleWrapper();
+            const todoItemTitleWrapper = createTodoItemTitleWrapper();
             todoItemTitleWrapper.textContent = todoItem[key];
             todoItemContainer.appendChild(todoItemTitleWrapper);
           }
@@ -95,7 +98,7 @@ function createSpan(project) {
   return span;
 }
 
-// Streamlines the creation of input fields and set a project name as value
+// Creates an input field and sets a project name as it's value
 function createInputField(project) {
   const input = document.createElement("input");
   input.type = "text";
@@ -105,7 +108,7 @@ function createInputField(project) {
   return input;
 }
 
-// Streamlines the creation of a div container for a project's properties
+// Creates a div container for a project
 function createProjectContainer(project) {
   const container = document.createElement("div");
   container.classList.add("project-item");
@@ -114,7 +117,7 @@ function createProjectContainer(project) {
   return container;
 }
 
-// Streamlines the creation of a div container for a todo item's properties
+// Creates a div container for a todo item
 function createTodoItemContainer(todoItem) {
   const container = document.createElement("div");
   container.classList.add("todo-item");
@@ -125,8 +128,8 @@ function createTodoItemContainer(todoItem) {
 }
 
 /*
-Streamlines the creation of a wrapper for a todo item's title property.
-Sets the conteneditable property of the wrapper to "true", so the title can be edited directly on the item.
+Creates a wrapper for a todo item title.
+Makes the title editable by contenteditable attribute.
 */
 function createTodoItemTitleWrapper() {
   const titleWrapper = document.createElement("div");
@@ -135,6 +138,22 @@ function createTodoItemTitleWrapper() {
   titleWrapper.tabIndex = "1";
 
   return titleWrapper;
+}
+
+function createTodoItemCheckComplete() {
+  const label = document.createElement("label");
+  label.classList.add("checkmark-container");
+
+  const input = document.createElement("input");
+  input.type = "radio";
+
+  const span = document.createElement("span");
+  span.classList.add("checkmark");
+
+  label.appendChild(input);
+  label.appendChild(span);
+
+  return label;
 }
 
 /* DOM ELEMENT MANIPULATION
@@ -245,10 +264,12 @@ export function isProjectLink(event) {
   return event.target.matches(".project-item");
 }
 
+// Checks if event.target is the name of a project button
 export function isProjectName(event) {
   return event.target.matches(".project-item span");
 }
 
+// Chcks if event.target is the input field in a project button
 export function isProjectInput(event) {
   return event.target.matches(".project-item input");
 }
