@@ -14,7 +14,7 @@ import {
 // Creates default project1 + todo item
 function createDefaultElements() {
   const defaultProject = new TodoProjectItem("Default Project");
-  const defaultItem = new TodoItem("1", "Default Task", "2024-09-13", "medium");
+  const defaultItem = new TodoItem("1", "Default Task", "2024-09-12");
   defaultProject.array.push(defaultItem);
 
   return defaultProject;
@@ -23,7 +23,7 @@ function createDefaultElements() {
 // Creates default project2 + todo item
 function createDefaultElements2() {
   const defaultProject2 = new TodoProjectItem("Default Project2");
-  const defaultItem2 = new TodoItem("2", "Default Task2", "2024-05-09", "high");
+  const defaultItem2 = new TodoItem("2", "Default Task2", "2024-05-09");
   defaultProject2.array.push(defaultItem2);
 
   return defaultProject2;
@@ -39,7 +39,7 @@ export const defaultProject2 = createDefaultElements2();
 export const projectsArray = [];
 
 // Adds new project to projectsArrray[]
-export function storeProject(...newProjects) {
+export function storeProjects(...newProjects) {
   newProjects.forEach((project) => {
     projectsArray.push(project);
   });
@@ -56,7 +56,7 @@ export function findProjectById(projectId) {
 // Creates new project from name string and stores it in projectsArray[]
 export function createAndStoreNewProject(projectName) {
   const newProject = new TodoProjectItem(projectName);
-  storeProject(newProject);
+  storeProjects(newProject);
 }
 
 // Finds the active project in the DOM and returns it as project object
@@ -75,6 +75,12 @@ export function storeProjectName(event) {
 
 /* TODO ITEM DATA MANAGEMENT
 ####################################################################*/
+export function getActiveTodoItemObjects() {
+  const activeProject = getActiveProject();
+
+  return activeProject.array;
+}
+
 // Creates new todo item with default name and adds it to the active project
 export function createAndStoreNewTodoItem() {
   const activeProject = getActiveProject();
@@ -103,4 +109,10 @@ export function removeTodoItemById(itemId) {
   const activeProject = getActiveProject();
   const itemIndex = activeProject.array.findIndex((item) => item.id === itemId);
   activeProject.array.splice(itemIndex, 1);
+}
+
+// Saves a date selected via datepicker in the todo item object
+export function saveTodoItemDate(todoItemId, date) {
+  const todoItem = findTodoItemById(todoItemId);
+  todoItem.dueDate = date;
 }

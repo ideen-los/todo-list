@@ -1,4 +1,7 @@
 import "./style.scss";
+import AirDatepicker from "air-datepicker";
+import "air-datepicker/air-datepicker.css";
+import localeEn from "air-datepicker/locale/en";
 import {
   getNav,
   getContent,
@@ -20,13 +23,15 @@ import {
   updateProjectName,
   hideProjectInputField,
   showProjectInputField,
+  getTodoItems,
+  createDatePickerObject,
 } from "./dom";
 import {
   findProjectById,
   defaultProject,
   defaultProject2,
   projectsArray,
-  storeProject,
+  storeProjects,
   createAndStoreNewProject,
   createAndStoreNewTodoItem,
   storeTodoItemTitle,
@@ -231,7 +236,7 @@ function handleTodoItemCheckComplete() {
       setTimeout(function () {
         removeTodoItemById(todoItemId);
         refreshContent(activeProject);
-      }, 2000);
+      }, 1000);
     }
   });
 }
@@ -239,7 +244,7 @@ function handleTodoItemCheckComplete() {
 /* APP INITIALIZATION
 ####################################################################*/
 // Pushes default data onto projectsArray[]
-storeProject(defaultProject, defaultProject2);
+storeProjects(defaultProject, defaultProject2);
 document.addEventListener("DOMContentLoaded", () => {
   // Displays the name of all projects from projectsArray[]
   refreshNav();

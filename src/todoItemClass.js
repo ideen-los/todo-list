@@ -1,22 +1,14 @@
 export class TodoItem {
-  static hiddenProperties = ["projectId", "id", "checked"]; // Define property, that should not be visible to the public
+  static hiddenProperties = ["projectId", "id", "checked"]; // Define properties, that should not be visible to the public
   static globalId = 0;
 
-  constructor(
-    projectId,
-    title = "New Task",
-    dueDate = "",
-    priority = "",
-    checked = "false"
-  ) {
+  constructor(projectId, title = "New Task", dueDate = "", checked = "false") {
     this.projectId = projectId;
     this.title = title;
-    /* this.description = description; */
     this.dueDate = dueDate;
-    this.priority = priority;
     this.checked = checked;
-    TodoItem.globalId += 1;
-    this.id = TodoItem.globalId.toString();
+    TodoItem.globalId += 1; // increment static variable globalId with each new instance
+    this.id = TodoItem.globalId.toString(); // assigns unique id to every new todo item
   }
 
   isHiddenProperty(property) {

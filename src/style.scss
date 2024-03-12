@@ -6,6 +6,7 @@ body {
 
 body {
   display: flex;
+  font-family: sans-serif;
 }
 
 aside {
@@ -46,14 +47,38 @@ aside {
   padding: 1rem 2rem;
 
   .todo-item {
-    padding: 1.5rem 1rem 1.5rem 0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1rem 1.2rem 0;
     border-bottom: 1px solid #e0e0e0;
+
+    &__name {
+      width: 80%;
+      margin-right: auto;
+
+      &:focus-visible {
+        outline: 0;
+      }
+    }
+
+    [class*="datepicker-"] {
+      cursor: pointer;
+      border: 0;
+      font-size: 1rem;
+      width: 118px;
+
+      &:focus-visible {
+        outline: 0;
+      }
+    }
 
     .checkmark-container {
       display: inline;
       position: relative;
+      height: 30px;
       padding-left: 35px;
-      margin-bottom: 12px;
       cursor: pointer;
       font-size: 22px;
       user-select: none;
@@ -76,12 +101,12 @@ aside {
         width: 25px;
         background-color: #fff;
         border-radius: 50%;
-        border: 2px solid #bbb;
+        border: 2px solid #999;
       }
 
       /* On mouse-over, add a grey background color */
       &:hover input ~ .checkmark {
-        background-color: #bbb;
+        background-color: #eee;
       }
 
       /* When the radio button is checked, add a blue background */

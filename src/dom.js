@@ -1,5 +1,14 @@
-import { getActiveProject, projectsArray } from "./data";
+import {
+  getActiveProject,
+  getActiveTodoItemObjects,
+  projectsArray,
+  saveTodoItemDate,
+} from "./data";
 import DOMPurify from "dompurify";
+import AirDatepicker from "air-datepicker";
+import "air-datepicker/air-datepicker.css";
+import localeEn from "air-datepicker/locale/en";
+import { add } from "date-fns";
 
 /* DOM ELEMENT SELECTION
 ####################################################################*/
@@ -18,7 +27,7 @@ export function getContentHeadline() {
 }
 export function getTodoItems() {
   const content = getContent();
-  return content.querySelectorAll(".list-item");
+  return content.querySelectorAll(".todo-item");
 }
 export function getNewTaskButton() {
   return document.querySelector(".add-todo-item");
@@ -27,7 +36,7 @@ export function getNewProjectButton() {
   return document.querySelector(".add-project");
 }
 
-/* CONTENT UPDATE
+/* CONTENT UPDATES
 ####################################################################*/
 /*
 Accesses the projects array, wraps all properties in a div container and appends it to the <nav>.
@@ -61,8 +70,9 @@ export function refreshContent(project) {
   if (project.array.length > 0) {
     project.array.forEach((todoItem) => {
       const todoItemContainer = createTodoItemContainer(todoItem);
-      const todoItemCheckComplete = createTodoItemCheckComplete();
+      const todoDateInput = createTodoItemDateInput(todoItem.id);
 
+      const todoItemCheckComplete = createTodoItemCheckComplete();
       todoItemContainer.appendChild(todoItemCheckComplete);
 
       for (let key in todoItem) {
@@ -71,14 +81,18 @@ export function refreshContent(project) {
         It also checks if the key is not part of the isHiddenProperty array.
         */
         if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
-          if (key !== "title") {
-            const todoItemKeyWrapper = document.createElement("span");
-            todoItemKeyWrapper.textContent = todoItem[key];
-            todoItemContainer.appendChild(todoItemKeyWrapper);
-          } else {
+          if (key === "title") {
             const todoItemTitleWrapper = createTodoItemTitleWrapper();
             todoItemTitleWrapper.textContent = todoItem[key];
             todoItemContainer.appendChild(todoItemTitleWrapper);
+          } else if (key === "dueDate") {
+            if (todoItem[key] !== "") {
+              todoDateInput.value = todoItem[key];
+            }
+          } else {
+            const todoItemKeyWrapper = document.createElement("span");
+            todoItemKeyWrapper.textContent = todoItem[key];
+            todoItemContainer.appendChild(todoItemKeyWrapper);
           }
           // Checks if a todo item has been marked as complete
         } else if (key === "checked") {
@@ -88,7 +102,10 @@ export function refreshContent(project) {
         }
       }
 
+      todoItemContainer.appendChild(todoDateInput);
+
       content.appendChild(todoItemContainer);
+      addDatepickersToTodoItems();
     });
   }
 }
@@ -145,6 +162,7 @@ function createTodoItemTitleWrapper() {
   return titleWrapper;
 }
 
+// Creates a radio button to mark a todo item as complete
 function createTodoItemCheckComplete() {
   const label = document.createElement("label");
   label.classList.add("checkmark-container");
@@ -159,6 +177,51 @@ function createTodoItemCheckComplete() {
   label.appendChild(span);
 
   return label;
+}
+
+// Creates a date input field to attach the AirDatepicker
+function createTodoItemDateInput(id) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "No date selected";
+  input.classList.add(`datepicker-${id}`);
+
+  return input;
+}
+
+/*
+Creates an AirDatepicker instance.
+A date selected via the picker is saved the todo item objects.
+If dueDate isn't defined the selectedDate property isn't included in the config.
+@param {string} id - The ID of the todo item the datepicker will be attached.
+@param {string} dueDate - Optional date if provided is preselected in the datepicker.
+*/
+function createDatePickerObject(id, dueDate) {
+  const config = {
+    locale: localeEn,
+    autoClose: true,
+    dateFormat: "yyyy-MM-dd",
+    onSelect: ({ date, formattedDate }) => {
+      // Saves the selected date in todo item dueDate property
+      saveTodoItemDate(id, formattedDate);
+    },
+  };
+
+  if (dueDate) {
+    config.selectedDates = [dueDate];
+  }
+
+  const datepicker = new AirDatepicker(`.datepicker-${id}`, config);
+
+  return datepicker;
+}
+
+// Attaches a datepicker to the todo items in the DOM
+function addDatepickersToTodoItems() {
+  const todoItems = getActiveTodoItemObjects();
+  todoItems.forEach((item) => {
+    createDatePickerObject(item.id, item.dueDate);
+  });
 }
 
 /* DOM ELEMENT MANIPULATION
