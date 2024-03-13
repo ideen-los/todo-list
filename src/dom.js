@@ -201,6 +201,7 @@ function createDatePickerObject(id, dueDate) {
     locale: localeEn,
     autoClose: true,
     dateFormat: "yyyy-MM-dd",
+    position: "bottom right",
     onSelect: ({ date, formattedDate }) => {
       // Saves the selected date in todo item dueDate property
       saveTodoItemDate(id, formattedDate);
@@ -272,6 +273,11 @@ export function getDataProjectId(htmlElement) {
 // Retrieves the ID from an HTML element
 export function getElementId(htmlElement) {
   return htmlElement.id;
+}
+
+// Retrieves HTML element by ID
+export function getElementById(id) {
+  return document.getElementById(id);
 }
 
 // Retrieves an HTML element by its ID

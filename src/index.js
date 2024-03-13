@@ -1,7 +1,4 @@
 import "./style.scss";
-import AirDatepicker from "air-datepicker";
-import "air-datepicker/air-datepicker.css";
-import localeEn from "air-datepicker/locale/en";
 import {
   getNav,
   getContent,
@@ -25,6 +22,7 @@ import {
   showProjectInputField,
   getTodoItems,
   createDatePickerObject,
+  getElementById,
 } from "./dom";
 import {
   findProjectById,
@@ -141,8 +139,10 @@ function handleProjectNameInteraction() {
   newTaskButton.addEventListener("click", () => {
     const activeProject = getActiveProject();
 
-    createAndStoreNewTodoItem();
+    const newTodoItemId = createAndStoreNewTodoItem();
+    console.log(newTodoItemId);
     refreshContent(activeProject);
+    focusElementAndClearContent(newTodoItemId);
   });
 })();
 
@@ -236,7 +236,7 @@ function handleTodoItemCheckComplete() {
       setTimeout(function () {
         removeTodoItemById(todoItemId);
         refreshContent(activeProject);
-      }, 1000);
+      }, 1500);
     }
   });
 }
