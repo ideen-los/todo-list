@@ -8,7 +8,7 @@ import DOMPurify from "dompurify";
 import AirDatepicker from "air-datepicker";
 import "air-datepicker/air-datepicker.css";
 import localeEn from "air-datepicker/locale/en";
-import { add } from "date-fns";
+import { format } from "date-fns";
 
 /* DOM ELEMENT SELECTION
 ####################################################################*/
@@ -89,7 +89,12 @@ export function refreshContent(project) {
             todoItemContainer.appendChild(todoItemTitleWrapper);
           } else if (key === "dueDate") {
             if (todoItem[key] !== "") {
+              const date = format(new Date(), "yyyy-MM-dd");
               todoDateInput.value = todoItem[key];
+
+              if (todoItem[key] < date) {
+                todoDateInput.classList.add("expired");
+              }
             }
           } else {
             const todoItemKeyWrapper = document.createElement("span");

@@ -115,6 +115,8 @@ export function removeTodoItemById(itemId) {
 
 // Saves a date selected via datepicker in the todo item object
 export function saveTodoItemDate(todoItemId, date) {
+  const activeProject = getActiveProject();
   const todoItem = findTodoItemById(todoItemId);
   todoItem.dueDate = date;
+  refreshContent(activeProject);
 }
