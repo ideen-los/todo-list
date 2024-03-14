@@ -23,6 +23,7 @@ import {
   getTodoItems,
   createDatePickerObject,
   getElementById,
+  getElementByDataProjectId,
 } from "./dom";
 import {
   findProjectById,
@@ -140,7 +141,6 @@ function handleProjectNameInteraction() {
     const activeProject = getActiveProject();
 
     const newTodoItemId = createAndStoreNewTodoItem();
-    console.log(newTodoItemId);
     refreshContent(activeProject);
     focusElementAndClearContent(newTodoItemId);
   });
@@ -151,8 +151,12 @@ function handleProjectNameInteraction() {
   const newProjectButton = getNewProjectButton();
 
   newProjectButton.addEventListener("click", () => {
-    createAndStoreNewProject();
+    const newProjectId = createAndStoreNewProject(); // returns the new project's ID
     refreshNav();
+    const newProject = getElementByDataProjectId(newProjectId);
+    addActiveClass(newProject);
+    const activeProject = getActiveProject();
+    refreshContent(activeProject);
   });
 })();
 
@@ -236,7 +240,7 @@ function handleTodoItemCheckComplete() {
       setTimeout(function () {
         removeTodoItemById(todoItemId);
         refreshContent(activeProject);
-      }, 1500);
+      }, 1100);
     }
   });
 }

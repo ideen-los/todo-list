@@ -48,9 +48,11 @@ export function refreshNav() {
 
   projectsArray.forEach((project) => {
     let container = createProjectContainer(project);
+    const icon = createIcon();
     let span = createSpan(project);
     let input = createInputField(project);
 
+    container.appendChild(icon);
     container.appendChild(span);
     container.appendChild(input);
     nav.appendChild(container);
@@ -115,15 +117,25 @@ export function refreshContent(project) {
 // Streamlines the creation of span elements and set a project name as value
 function createSpan(project) {
   const span = document.createElement("span");
+
   span.textContent = project.name;
 
   return span;
+}
+
+function createIcon() {
+  const icon = document.createElement("i");
+
+  icon.textContent = "☰";
+
+  return icon;
 }
 
 // Creates an input field and sets a project name as it's value
 function createInputField(project) {
   const input = document.createElement("input");
   input.type = "text";
+  input.maxLength = "30";
   input.classList.add("hide");
   input.value = project.name;
 
@@ -270,6 +282,21 @@ export function getDataProjectId(htmlElement) {
   return htmlElement.getAttribute("data-project-id");
 }
 
+export function getElementByDataProjectId(id) {
+  const allProjectLinks = getProjectLinks();
+  let projectLink = null;
+
+  allProjectLinks.forEach((link) => {
+    let dataProjectId = getDataProjectId(link);
+
+    if (dataProjectId === id) {
+      projectLink = link;
+    }
+  });
+
+  return projectLink;
+}
+
 // Retrieves the ID from an HTML element
 export function getElementId(htmlElement) {
   return htmlElement.id;
@@ -343,7 +370,7 @@ export function isProjectName(event) {
   return event.target.matches(".project-item span");
 }
 
-// Chcks if event.target is the input field in a project button
+// Checks if event.target is the input field in a project button
 export function isProjectInput(event) {
   return event.target.matches(".project-item input");
 }

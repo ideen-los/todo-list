@@ -57,6 +57,8 @@ export function findProjectById(projectId) {
 export function createAndStoreNewProject(projectName) {
   const newProject = new TodoProjectItem(projectName);
   storeProjects(newProject);
+
+  return newProject.id;
 }
 
 // Finds the active project in the DOM and returns it as project object
