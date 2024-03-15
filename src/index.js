@@ -292,10 +292,10 @@ if (isLocalStorageAvailable()) {
     projectsArray.splice(0, projectsArray.length);
     projectsArray.push(...newProjectsArray);
   } else {
-    storeProjects(defaultProject, defaultProject2);
+    storeProjects(defaultProject);
   }
 } else {
-  storeProjects(defaultProject, defaultProject2);
+  storeProjects(defaultProject);
 }
 document.addEventListener("DOMContentLoaded", () => {
   // Displays the name of all projects from projectsArray[]

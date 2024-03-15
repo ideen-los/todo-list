@@ -8,31 +8,25 @@ import {
   getElementId,
   sanitizeUserData,
 } from "./dom";
-import { isLocalStorageAvailable, storageAvailable } from "./localStorage";
+import {
+  isLocalStorageAvailable,
+  saveProjectsToLocalStorage,
+  storageAvailable,
+} from "./localStorage";
 
 /* DEFAULT DATA CREATION
 ####################################################################*/
 // Creates default project1 + todo item
 function createDefaultElements() {
   const defaultProject = new TodoProjectItem("Default Project");
-  const defaultItem = new TodoItem("1", "Default Task", "2024-09-12");
+  const defaultItem = new TodoItem("1", "Default Task");
   defaultProject.array.push(defaultItem);
 
   return defaultProject;
 }
 
-// Creates default project2 + todo item
-function createDefaultElements2() {
-  const defaultProject2 = new TodoProjectItem("Default Project2");
-  const defaultItem2 = new TodoItem("2", "Default Task2", "2024-05-09");
-  defaultProject2.array.push(defaultItem2);
-
-  return defaultProject2;
-}
-
 // Default project variables
 export const defaultProject = createDefaultElements();
-export const defaultProject2 = createDefaultElements2();
 
 /* PROJECT DATA MANAGEMENT
 ####################################################################*/
@@ -131,7 +125,9 @@ export function removeTodoItemById(itemId) {
 export function saveTodoItemDate(todoItemId, date) {
   const activeProject = getActiveProject();
   const todoItem = findTodoItemById(todoItemId);
+
   todoItem.dueDate = date;
+  saveProjectsToLocalStorage();
   refreshContent(activeProject);
 }
 

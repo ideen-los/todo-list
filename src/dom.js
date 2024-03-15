@@ -208,8 +208,8 @@ function createTodoItemDateInput(id) {
 
 /*
 Creates an AirDatepicker instance.
-A date selected via the picker is saved the todo item objects.
-If dueDate isn't defined the selectedDate property isn't included in the config.
+A date selected via the picker is stored in the todo item dueDate property.
+If dueDate isn't defined, no date will be preselected.
 @param {string} id - The ID of the todo item the datepicker will be attached.
 @param {string} dueDate - Optional date if provided is preselected in the datepicker.
 */
@@ -219,16 +219,24 @@ function createDatePickerObject(id, dueDate) {
     autoClose: true,
     dateFormat: "yyyy-MM-dd",
     position: "bottom right",
+    // Fires when user selects a date in the datepicker
     onSelect: ({ date, formattedDate }) => {
-      // Saves the selected date in todo item dueDate property
-      saveTodoItemDate(id, formattedDate);
+      // Saves the selected date in the todo item's dueDate property
+      if (date !== undefined) {
+        saveTodoItemDate(id, formattedDate);
+      } else {
+        // Hide the datepicker if a date was deselected (returns undefined)
+        datepicker.hide();
+      }
     },
   };
 
+  // If dueDate has been set, preselect this date in the datepicker
   if (dueDate) {
     config.selectedDates = [dueDate];
   }
 
+  // Create a new datepicker instance with the above config settings
   const datepicker = new AirDatepicker(`.datepicker-${id}`, config);
 
   return datepicker;
