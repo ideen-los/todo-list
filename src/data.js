@@ -8,6 +8,7 @@ import {
   getElementId,
   sanitizeUserData,
 } from "./dom";
+import { isLocalStorageAvailable, storageAvailable } from "./localStorage";
 
 /* DEFAULT DATA CREATION
 ####################################################################*/
@@ -75,6 +76,19 @@ export function storeProjectName(event) {
   activeProject.name = sanitizedValue;
 }
 
+export function getProjectsAndReconstruct(storedProjectsArray) {
+  const newProjectsArray = [];
+
+  storedProjectsArray.forEach((storedProject) => {
+    let newProject = new TodoProjectItem(storedProject.name);
+    newProject.array = getTodoItemsAndReconstruct(storedProject.array);
+
+    newProjectsArray.push(newProject);
+  });
+
+  return newProjectsArray;
+}
+
 /* TODO ITEM DATA MANAGEMENT
 ####################################################################*/
 export function getActiveTodoItemObjects() {
@@ -119,4 +133,22 @@ export function saveTodoItemDate(todoItemId, date) {
   const todoItem = findTodoItemById(todoItemId);
   todoItem.dueDate = date;
   refreshContent(activeProject);
+}
+
+export function getTodoItemsAndReconstruct(projectArray) {
+  const newProjectArray = [];
+
+  projectArray.forEach((storedTodoItem) => {
+    let newTodoItem = new TodoItem(
+      storedTodoItem.projectId,
+      storedTodoItem.title,
+      storedTodoItem.dueDate,
+      storedTodoItem.checked,
+      storedTodoItem.id
+    );
+
+    newProjectArray.push(newTodoItem);
+  });
+
+  return newProjectArray;
 }

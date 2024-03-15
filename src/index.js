@@ -38,14 +38,19 @@ import {
   findTodoItemById,
   removeTodoItemById,
   storeProjectName,
+  getProjectsAndReconstruct,
 } from "./data";
+import {
+  isLocalStorageAvailable,
+  saveProjectsToLocalStorage,
+} from "./localStorage";
 
-/* USER INTERACTION
-####################################################################*/
 /* 
-Activates a project. 
-Returns it from projectsArray[] by looking up it's ID.
-It's retrieved from a <div> referencing the project name.
+####################################################################
+PROJECT ACTIVATION
+Returns project from projectsArray[] by it's ID.
+ID is retrieved from a <div> referencing the project's name.
+####################################################################
 */
 function initializeProjectNavigation() {
   const nav = getNav();
@@ -62,7 +67,31 @@ function initializeProjectNavigation() {
   });
 }
 
-// Manages user interaction/updates to project name
+/* 
+###############################################################################
+PROJECT CREATION
+Creates new project via click on "New Project" 
+###############################################################################
+*/
+(function initializeNewProjectButton() {
+  const newProjectButton = getNewProjectButton();
+
+  newProjectButton.addEventListener("click", () => {
+    const newProjectId = createAndStoreNewProject(); // returns the new project's ID
+    refreshNav();
+    const newProject = getElementByDataProjectId(newProjectId);
+    addActiveClass(newProject);
+    const activeProject = getActiveProject();
+    refreshContent(activeProject);
+  });
+})();
+
+/* 
+###############################################################################
+PROJECT NAME INTERACTION
+Manages user interaction/updates to project name 
+###############################################################################
+*/
 function handleProjectNameInteraction() {
   const nav = getNav();
 
@@ -101,6 +130,7 @@ function handleProjectNameInteraction() {
     if (isProjectInput(event)) {
       storeProjectName(event);
       updateProjectName(event);
+      saveProjectsToLocalStorage();
     }
   });
 
@@ -133,7 +163,12 @@ function handleProjectNameInteraction() {
   });
 }
 
-// Creates new todo item via click on "Add Task"
+/* 
+###############################################################################
+TODO ITEM CREATION
+Creates new todo item via click on "Add Task" 
+###############################################################################
+*/
 (function initializeNewTaskButton() {
   const newTaskButton = getNewTaskButton();
 
@@ -141,26 +176,18 @@ function handleProjectNameInteraction() {
     const activeProject = getActiveProject();
 
     const newTodoItemId = createAndStoreNewTodoItem();
+    saveProjectsToLocalStorage();
     refreshContent(activeProject);
     focusElementAndClearContent(newTodoItemId);
   });
 })();
 
-// Creates new project via click on "New Project"
-(function initializeNewProjectButton() {
-  const newProjectButton = getNewProjectButton();
-
-  newProjectButton.addEventListener("click", () => {
-    const newProjectId = createAndStoreNewProject(); // returns the new project's ID
-    refreshNav();
-    const newProject = getElementByDataProjectId(newProjectId);
-    addActiveClass(newProject);
-    const activeProject = getActiveProject();
-    refreshContent(activeProject);
-  });
-})();
-
-// Manages user interaction with a todo item title
+/*
+###############################################################################
+TODO ITEM TITLE INTERACTION
+Manages user interaction with a todo item title 
+###############################################################################
+*/
 function handleTodoItemTitleInteraction() {
   const content = getContent();
 
@@ -171,6 +198,7 @@ function handleTodoItemTitleInteraction() {
   content.addEventListener("input", (event) => {
     if (isTodoItemTitle(event)) {
       storeTodoItemTitle(event);
+      saveProjectsToLocalStorage();
     }
   });
 
@@ -182,9 +210,11 @@ function handleTodoItemTitleInteraction() {
     if (isTodoItemTitle(event)) {
       if (isTextContentEmpty(event)) {
         removeTodoItemById(todoItemId);
+        saveProjectsToLocalStorage();
         refreshContent(activeProject);
       } else {
         storeTodoItemTitle(event);
+        saveProjectsToLocalStorage();
       }
     }
   });
@@ -198,11 +228,13 @@ function handleTodoItemTitleInteraction() {
     if (isTodoItemTitle(event) && event.key === "Enter") {
       if (isTextContentEmpty(event)) {
         removeTodoItemById(todoItemId);
+        saveProjectsToLocalStorage();
         refreshContent(activeProject);
       } else {
         event.preventDefault();
 
         const newTodoItemId = createAndStoreNewTodoItem(); // returns the new item's id
+        saveProjectsToLocalStorage();
         refreshContent(activeProject);
         focusElementAndClearContent(newTodoItemId);
       }
@@ -215,9 +247,11 @@ function handleTodoItemTitleInteraction() {
 
       if (isTextContentEmpty(event)) {
         todoItem.resetTitle();
+        saveProjectsToLocalStorage();
         refreshContent(activeProject);
       } else {
         storeTodoItemTitle(event);
+        saveProjectsToLocalStorage();
         body.focus();
       }
     }
@@ -239,6 +273,7 @@ function handleTodoItemCheckComplete() {
 
       setTimeout(function () {
         removeTodoItemById(todoItemId);
+        saveProjectsToLocalStorage();
         refreshContent(activeProject);
       }, 1100);
     }
@@ -247,8 +282,21 @@ function handleTodoItemCheckComplete() {
 
 /* APP INITIALIZATION
 ####################################################################*/
-// Pushes default data onto projectsArray[]
-storeProjects(defaultProject, defaultProject2);
+// Loads default data or projects from local storage
+if (isLocalStorageAvailable()) {
+  if (localStorage.getItem("projectsArray") !== null) {
+    const localProjectsArray = JSON.parse(
+      localStorage.getItem("projectsArray")
+    );
+    const newProjectsArray = getProjectsAndReconstruct(localProjectsArray);
+    projectsArray.splice(0, projectsArray.length);
+    projectsArray.push(...newProjectsArray);
+  } else {
+    storeProjects(defaultProject, defaultProject2);
+  }
+} else {
+  storeProjects(defaultProject, defaultProject2);
+}
 document.addEventListener("DOMContentLoaded", () => {
   // Displays the name of all projects from projectsArray[]
   refreshNav();
@@ -256,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
   addActiveClass(getProjectLinks()[0]);
   // Associates the project names with the actual poject objects
   initializeProjectNavigation();
-  // Displays all todo items from the first project
+  // Displays all todo items from the first project in the projectsArray[]
   refreshContent(projectsArray[0]);
   // Handles updates of project name by the user
   handleProjectNameInteraction();
