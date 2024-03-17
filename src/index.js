@@ -5,9 +5,8 @@ import {
   getProjectLinks,
   refreshNav,
   refreshContent,
-  addActiveClass,
+  addActiveClassToElement,
   getDataProjectId,
-  getTodoItemNameFieldById,
   getElementId,
   focusElementAndClearContent,
   isTodoItemTitle,
@@ -20,28 +19,38 @@ import {
   updateProjectName,
   hideProjectInputField,
   showProjectInputField,
-  getTodoItems,
-  createDatePickerObject,
-  getElementById,
-  getElementByDataProjectId,
+  createModalBox,
+  getContentHeadlineContainer,
+  getBody,
+  displayEmptyPojectPageHeadline,
+  disableNewTaskButton,
+  disableRemoveProjectButton,
+  enableNewTaskButton,
+  enableRemoveProjectButton,
 } from "./dom";
 import {
+  isProjectsArrayNotEmpty,
   findProjectById,
   defaultProject,
-  defaultProject2,
   projectsArray,
   storeProjects,
   createAndStoreNewProject,
   createAndStoreNewTodoItem,
   storeTodoItemTitle,
-  getActiveProject,
   findTodoItemById,
   removeTodoItemById,
   storeProjectName,
-  getProjectsAndReconstruct,
+  reconstructAllProjectObjects,
+  emptyOldArrayAndPopulateWithNewItems,
+  getIndexOfProjectInProjectsArray,
+  setActiveProject,
+  getActiveProject,
+  addActiveClassToActiveProject,
 } from "./data";
 import {
+  getProjectsFromLocalStorage,
   isLocalStorageAvailable,
+  isProjectsArrayInStorage,
   saveProjectsToLocalStorage,
 } from "./localStorage";
 
@@ -61,7 +70,9 @@ function initializeProjectNavigation() {
       const projectId = getDataProjectId(projectLink);
       const activeProject = findProjectById(projectId);
 
-      addActiveClass(projectLink);
+      setActiveProject(activeProject);
+      addActiveClassToActiveProject();
+      saveProjectsToLocalStorage();
       refreshContent(activeProject);
     }
   });
@@ -78,11 +89,13 @@ Creates new project via click on "New Project"
 
   newProjectButton.addEventListener("click", () => {
     const newProjectId = createAndStoreNewProject(); // returns the new project's ID
+    const newProject = findProjectById(newProjectId);
+
+    setActiveProject(newProject);
+    saveProjectsToLocalStorage();
     refreshNav();
-    const newProject = getElementByDataProjectId(newProjectId);
-    addActiveClass(newProject);
-    const activeProject = getActiveProject();
-    refreshContent(activeProject);
+    addActiveClassToActiveProject();
+    refreshContent(newProject);
   });
 })();
 
@@ -165,22 +178,82 @@ function handleProjectNameInteraction() {
 
 /* 
 ###############################################################################
+PROJECT REMOVAL
+Removes a project when clicking "remove" next to the project's page title
+###############################################################################
+*/
+function initializeRemoveProjectButton() {
+  const body = getBody();
+  const projectHeadlineContainer = getContentHeadlineContainer();
+
+  projectHeadlineContainer.addEventListener("click", (event) => {
+    if (isProjectsArrayNotEmpty()) {
+      if (event.target.matches(".remove-project")) {
+        const modalBox = createModalBox();
+        body.appendChild(modalBox);
+
+        setTimeout(() => {
+          modalBox.classList.add("fade-in");
+        }, 2);
+
+        initializeModalBox();
+      }
+    }
+  });
+}
+
+function initializeModalBox() {
+  const modalBox = document.querySelector(".modal-container");
+  const cancelButton = modalBox.querySelector(".modal-cancel");
+  const confirmButton = modalBox.querySelector(".modal-confirm");
+
+  modalBox.addEventListener("click", (event) => {
+    if (event.target === modalBox && event.target !== modalBox.firstChild) {
+      modalBox.remove();
+    } else if (event.target === cancelButton) {
+      modalBox.remove();
+    } else if (event.target === confirmButton) {
+      const activeProject = getActiveProject();
+      const activeProjectIndex =
+        getIndexOfProjectInProjectsArray(activeProject);
+      const projectLinks = getProjectLinks();
+
+      projectsArray.splice(activeProjectIndex, 1); // remove the active project from the projectsArray[]
+      saveProjectsToLocalStorage();
+      addActiveClassToElement(projectLinks[0]);
+      refreshNav();
+      refreshContent(projectsArray[0]);
+      modalBox.remove();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      modalBox.remove();
+    }
+  });
+}
+
+/* 
+###############################################################################
 TODO ITEM CREATION
 Creates new todo item via click on "Add Task" 
 ###############################################################################
 */
-(function initializeNewTaskButton() {
+function initializeNewTaskButton() {
   const newTaskButton = getNewTaskButton();
 
   newTaskButton.addEventListener("click", () => {
-    const activeProject = getActiveProject();
+    if (isProjectsArrayNotEmpty()) {
+      const activeProject = getActiveProject();
+      const newTodoItemId = createAndStoreNewTodoItem(); // returns the new todo item's ID
 
-    const newTodoItemId = createAndStoreNewTodoItem();
-    saveProjectsToLocalStorage();
-    refreshContent(activeProject);
-    focusElementAndClearContent(newTodoItemId);
+      saveProjectsToLocalStorage();
+      refreshContent(activeProject);
+      focusElementAndClearContent(newTodoItemId);
+    }
   });
-})();
+}
 
 /*
 ###############################################################################
@@ -282,33 +355,55 @@ function handleTodoItemCheckComplete() {
 
 /* APP INITIALIZATION
 ####################################################################*/
-// Loads default data or projects from local storage
-if (isLocalStorageAvailable()) {
-  if (localStorage.getItem("projectsArray") !== null) {
-    const localProjectsArray = JSON.parse(
-      localStorage.getItem("projectsArray")
-    );
-    const newProjectsArray = getProjectsAndReconstruct(localProjectsArray);
-    projectsArray.splice(0, projectsArray.length);
-    projectsArray.push(...newProjectsArray);
-  } else {
-    storeProjects(defaultProject);
-  }
+// Gets all projects from local storage if available or loads default data
+if (isLocalStorageAvailable() && isProjectsArrayInStorage()) {
+  const localStorageProjectsArray = getProjectsFromLocalStorage();
+  // Reconstructs all project objects to reestablish prototype inheritance and methods
+  const newProjectsArray = reconstructAllProjectObjects(
+    localStorageProjectsArray
+  );
+  emptyOldArrayAndPopulateWithNewItems(newProjectsArray);
 } else {
-  storeProjects(defaultProject);
+  storeProjects(defaultProject); // load default data
 }
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Displays the name of all projects from projectsArray[]
-  refreshNav();
-  // Marks the first project as active
-  addActiveClass(getProjectLinks()[0]);
+  if (isProjectsArrayNotEmpty()) {
+    // Displays the name of all projects from projectsArray[]
+    refreshNav();
+    // Highlights the project with the active property set to true
+    if (isLocalStorageAvailable && getActiveProject().id !== "") {
+      const activeProject = addActiveClassToActiveProject();
+      // Displays all todo items from the first project in the projectsArray[]
+      refreshContent(activeProject);
+    } else {
+      // Highlights the first project in the projectsArray[]
+      addActiveClassToElement(getProjectLinks()[0]);
+      // Displays all todo items from the first project in the projectsArray[]
+      refreshContent(projectsArray[0]);
+    }
+    enableNewTaskButton();
+    enableRemoveProjectButton();
+  } else {
+    /* 
+    displayEmptyProjectListPlaceholderImage();
+    displayEmptyTodoItemListPlaceholderImage(); 
+    */
+    displayEmptyPojectPageHeadline();
+    disableNewTaskButton();
+    disableRemoveProjectButton();
+  }
+
   // Associates the project names with the actual poject objects
   initializeProjectNavigation();
-  // Displays all todo items from the first project in the projectsArray[]
-  refreshContent(projectsArray[0]);
   // Handles updates of project name by the user
   handleProjectNameInteraction();
+  // Handles removal of projects via button next to project page title
+  initializeRemoveProjectButton();
+  // Handles creation of new todo items via a button on top right
+  initializeNewTaskButton();
   // Handles updates of todo item title by the user
   handleTodoItemTitleInteraction();
+  // Handles the "check as complete" action
   handleTodoItemCheckComplete();
 });

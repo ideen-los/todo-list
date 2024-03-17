@@ -7,6 +7,8 @@ import {
   findActiveProjectId,
   getElementId,
   sanitizeUserData,
+  getElementByDataProjectId,
+  addActiveClassToElement,
 } from "./dom";
 import {
   isLocalStorageAvailable,
@@ -18,7 +20,7 @@ import {
 ####################################################################*/
 // Creates default project1 + todo item
 function createDefaultElements() {
-  const defaultProject = new TodoProjectItem("Default Project");
+  const defaultProject = new TodoProjectItem("Default Project", true);
   const defaultItem = new TodoItem("1", "Default Task");
   defaultProject.array.push(defaultItem);
 
@@ -32,6 +34,11 @@ export const defaultProject = createDefaultElements();
 ####################################################################*/
 // Array that holds all project items
 export const projectsArray = [];
+
+// Returns true if the projectsArray[] is NOT empty
+export function isProjectsArrayNotEmpty() {
+  return projectsArray.length > 0;
+}
 
 // Adds new project to projectsArrray[]
 export function storeProjects(...newProjects) {
@@ -56,11 +63,42 @@ export function createAndStoreNewProject(projectName) {
   return newProject.id;
 }
 
-// Finds the active project in the DOM and returns it as project object
+// Finds the active project and returns it
 export function getActiveProject() {
-  const activeProjectId = findActiveProjectId();
+  let activeProject = null;
 
-  return findProjectById(activeProjectId);
+  projectsArray.forEach((project) => {
+    if (project.active === true) {
+      activeProject = project;
+    }
+  });
+
+  return activeProject;
+}
+
+export function setActiveProject(project) {
+  if (isProjectsArrayNotEmpty) {
+    projectsArray.forEach((item) => {
+      if (item.id !== project.id) {
+        item.active = false;
+      } else {
+        item.active = true;
+      }
+    });
+  }
+}
+
+export function addActiveClassToActiveProject() {
+  const activeProject = getActiveProject();
+  const activeProjectLink = getElementByDataProjectId(activeProject.id);
+
+  addActiveClassToElement(activeProjectLink);
+
+  return activeProject;
+}
+
+export function getIndexOfProjectInProjectsArray(project) {
+  return projectsArray.findIndex((item) => item === project);
 }
 
 // Sanitizes input value and stores it as new name for the project
@@ -70,17 +108,27 @@ export function storeProjectName(event) {
   activeProject.name = sanitizedValue;
 }
 
-export function getProjectsAndReconstruct(storedProjectsArray) {
+// Get all projects from local storage and reconstruct them with the ProjectItem class to reestablish inheritance, methods, etc.
+export function reconstructAllProjectObjects(storedProjectsArray) {
   const newProjectsArray = [];
 
   storedProjectsArray.forEach((storedProject) => {
-    let newProject = new TodoProjectItem(storedProject.name);
-    newProject.array = getTodoItemsAndReconstruct(storedProject.array);
+    let newProject = new TodoProjectItem(
+      storedProject.name,
+      storedProject.active
+    );
+    newProject.array = reconstructAllTodoItems(storedProject.array);
 
     newProjectsArray.push(newProject);
   });
 
   return newProjectsArray;
+}
+
+// Takes the current projects array, empties it and pushes all items from a new array onto it
+export function emptyOldArrayAndPopulateWithNewItems(newArray) {
+  projectsArray.splice(0, projectsArray.length);
+  projectsArray.push(...newArray);
 }
 
 /* TODO ITEM DATA MANAGEMENT
@@ -131,7 +179,7 @@ export function saveTodoItemDate(todoItemId, date) {
   refreshContent(activeProject);
 }
 
-export function getTodoItemsAndReconstruct(projectArray) {
+export function reconstructAllTodoItems(projectArray) {
   const newProjectArray = [];
 
   projectArray.forEach((storedTodoItem) => {

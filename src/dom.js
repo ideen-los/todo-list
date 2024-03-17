@@ -1,5 +1,4 @@
 import {
-  getActiveProject,
   getActiveTodoItemObjects,
   projectsArray,
   saveTodoItemDate,
@@ -10,8 +9,14 @@ import "air-datepicker/air-datepicker.css";
 import localeEn from "air-datepicker/locale/en";
 import { format } from "date-fns";
 
-/* DOM ELEMENT SELECTION
-####################################################################*/
+/*
+###############################################################################
+DOM ELEMENT SELECTION
+###############################################################################
+*/
+export function getBody() {
+  return document.querySelector("body");
+}
 export function getContent() {
   return document.querySelector("#content .todo-container");
 }
@@ -21,6 +26,9 @@ export function getNav() {
 export function getProjectLinks() {
   const nav = getNav();
   return nav.querySelectorAll(".project-item");
+}
+export function getContentHeadlineContainer() {
+  return document.querySelector(".project-headline");
 }
 export function getContentHeadline() {
   return document.querySelector("h1");
@@ -35,9 +43,15 @@ export function getNewTaskButton() {
 export function getNewProjectButton() {
   return document.querySelector(".add-project");
 }
+export function getRemoveProjectButton() {
+  return document.querySelector(".remove-project");
+}
 
-/* CONTENT UPDATES
-####################################################################*/
+/*
+###############################################################################
+NAV UPDATES (Project List)
+###############################################################################
+*/
 /*
 Accesses the projects array, wraps all properties in a div container and appends it to the <nav>.
 The name property of all projects is wrapped in a span tag and an input field. Those are appended to the container.
@@ -60,6 +74,11 @@ export function refreshNav() {
 }
 
 /* 
+###############################################################################
+CONTENT UPDATES (todo item list)
+###############################################################################
+*/
+/* 
 Displays all todo items associated with a project object inside the content section.
 All properties are wrapped in a div container.
 The individual properties are wrapped in a span tag and appended to the container
@@ -67,58 +86,70 @@ The individual properties are wrapped in a span tag and appended to the containe
 export function refreshContent(project) {
   const content = getContent();
   content.innerHTML = "";
-  updateContentHeadline();
 
-  if (project.array.length > 0) {
-    project.array.forEach((todoItem) => {
-      const todoItemContainer = createTodoItemContainer(todoItem);
-      const todoDateInput = createTodoItemDateInput(todoItem.id);
+  if (project === undefined || project.length === 0) {
+    displayEmptyPojectPageHeadline();
+    disableNewTaskButton();
+    disableRemoveProjectButton();
+  } else {
+    updateContentHeadline(project);
+    enableNewTaskButton();
+    enableRemoveProjectButton();
 
-      const todoItemCheckComplete = createTodoItemCheckComplete();
-      todoItemContainer.appendChild(todoItemCheckComplete);
+    if (project.array.length > 0) {
+      project.array.forEach((todoItem) => {
+        const todoItemContainer = createTodoItemContainer(todoItem);
+        const todoDateInput = createTodoItemDateInput(todoItem.id);
 
-      for (let key in todoItem) {
-        /* 
+        const todoItemCheckComplete = createTodoItemCheckComplete();
+        todoItemContainer.appendChild(todoItemCheckComplete);
+
+        for (let key in todoItem) {
+          /* 
         Checks if the key belongs to the item's instance and renders it in the DOM.
         It also checks if the key is not part of the isHiddenProperty array.
         */
-        if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
-          if (key === "title") {
-            const todoItemTitleWrapper = createTodoItemTitleWrapper();
-            todoItemTitleWrapper.textContent = todoItem[key];
-            todoItemContainer.appendChild(todoItemTitleWrapper);
-          } else if (key === "dueDate") {
-            if (todoItem[key] !== "") {
-              const date = format(new Date(), "yyyy-MM-dd");
-              todoDateInput.value = todoItem[key];
+          if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
+            if (key === "title") {
+              const todoItemTitleWrapper = createTodoItemTitleWrapper();
+              todoItemTitleWrapper.textContent = todoItem[key];
+              todoItemContainer.appendChild(todoItemTitleWrapper);
+            } else if (key === "dueDate") {
+              if (todoItem[key] !== "") {
+                const date = format(new Date(), "yyyy-MM-dd");
+                todoDateInput.value = todoItem[key];
 
-              if (todoItem[key] < date) {
-                todoDateInput.classList.add("expired");
+                if (todoItem[key] < date) {
+                  todoDateInput.classList.add("expired");
+                }
               }
+            } else {
+              const todoItemKeyWrapper = document.createElement("span");
+              todoItemKeyWrapper.textContent = todoItem[key];
+              todoItemContainer.appendChild(todoItemKeyWrapper);
             }
-          } else {
-            const todoItemKeyWrapper = document.createElement("span");
-            todoItemKeyWrapper.textContent = todoItem[key];
-            todoItemContainer.appendChild(todoItemKeyWrapper);
-          }
-          // Checks if a todo item has been marked as complete
-        } else if (key === "checked") {
-          if (todoItem[key] === "true") {
-            todoItemContainer.classList.add("checked");
+            // Checks if a todo item has been marked as complete
+          } else if (key === "checked") {
+            if (todoItem[key] === "true") {
+              todoItemContainer.classList.add("checked");
+            }
           }
         }
-      }
 
-      todoItemContainer.appendChild(todoDateInput);
-
-      content.appendChild(todoItemContainer);
-      addDatepickersToTodoItems();
-    });
+        todoItemContainer.appendChild(todoDateInput);
+        content.appendChild(todoItemContainer);
+      });
+    }
+    removeDatepickersFromTodoItems();
+    addDatepickersToTodoItems();
   }
 }
 
-/* DOM ELEMENT CREATION
-####################################################################*/
+/*
+###############################################################################
+DOM ELEMENT CREATION
+###############################################################################
+*/
 // Streamlines the creation of span elements and set a project name as value
 function createSpan(project) {
   const span = document.createElement("span");
@@ -206,6 +237,8 @@ function createTodoItemDateInput(id) {
   return input;
 }
 
+const datepickerInstances = [];
+
 /*
 Creates an AirDatepicker instance.
 A date selected via the picker is stored in the todo item dueDate property.
@@ -239,19 +272,61 @@ function createDatePickerObject(id, dueDate) {
   // Create a new datepicker instance with the above config settings
   const datepicker = new AirDatepicker(`.datepicker-${id}`, config);
 
+  datepickerInstances.push(datepicker);
+
   return datepicker;
 }
 
 // Attaches a datepicker to the todo items in the DOM
 function addDatepickersToTodoItems() {
   const todoItems = getActiveTodoItemObjects();
+
   todoItems.forEach((item) => {
     createDatePickerObject(item.id, item.dueDate);
   });
 }
 
-/* DOM ELEMENT MANIPULATION
-####################################################################*/
+// Removes datepickers from the todo items in the DOM
+function removeDatepickersFromTodoItems() {
+  datepickerInstances.length = 0;
+}
+
+// Creates a modal box to confirm removing projects
+export function createModalBox() {
+  const projectName = getContentHeadline().textContent;
+
+  const modalOverlay = document.createElement("div");
+  modalOverlay.classList.add("modal-container");
+
+  const modalBox = document.createElement("div");
+  modalBox.classList.add("modal-box");
+  modalOverlay.appendChild(modalBox);
+
+  const modalText = document.createElement("p");
+  modalText.innerHTML = `Are you sure you want to remove <strong>${projectName}<strong>?`;
+  modalBox.appendChild(modalText);
+
+  const buttonContainer = document.createElement("div");
+  modalBox.appendChild(buttonContainer);
+
+  const confirmButton = document.createElement("button");
+  confirmButton.textContent = "Remove project";
+  confirmButton.classList.add("modal-confirm");
+  buttonContainer.appendChild(confirmButton);
+
+  const cancelButton = document.createElement("button");
+  cancelButton.textContent = "Cancel";
+  cancelButton.classList.add("modal-cancel");
+  buttonContainer.appendChild(cancelButton);
+
+  return modalOverlay;
+}
+
+/*
+###############################################################################
+DOM ELEMENT MANIPULATION
+###############################################################################
+*/
 // Removes all "active" classes from the links that represent the project objects
 function removeAllActiveClasses() {
   const projectLinks = getProjectLinks();
@@ -261,15 +336,28 @@ function removeAllActiveClasses() {
 }
 
 // Adds the class "active" to a link that represents a project object
-export function addActiveClass(htmlElement) {
+export function addActiveClassToElement(htmlElement) {
   removeAllActiveClasses();
   htmlElement.classList.add("active");
 }
 
 // Sets the headline above the todo items to the title property of the active project object
-export function updateContentHeadline() {
+export function updateContentHeadline(project) {
   const headline = getContentHeadline();
-  headline.textContent = getActiveProject().name;
+
+  headline.textContent = project.name;
+
+  if (headline.classList.contains("no-project")) {
+    headline.classList.remove("no-project");
+  }
+}
+
+// Displays a "No project selected" message for the project page title
+export function displayEmptyPojectPageHeadline() {
+  const headline = getContentHeadline();
+
+  headline.textContent = "No project selected";
+  headline.classList.add("no-project");
 }
 
 // Focuses the pointer on a specific todo element identified by it's ID and clears it's textContent
@@ -288,13 +376,53 @@ export function updateProjectName(event) {
   name.textContent = sanitizedValue;
 }
 
-/* DOM ELEMENT DATA RETRIEVAL
-####################################################################*/
+// Adds the class "disabled" to the remove project button
+export function disableRemoveProjectButton() {
+  const removeProjectButton = getRemoveProjectButton();
+
+  if (!removeProjectButton.classList.contains("disabled")) {
+    removeProjectButton.classList.add("disabled");
+  }
+}
+
+// Removes the class "disabled" from the remove project button
+export function enableRemoveProjectButton() {
+  const removeProjectButton = getRemoveProjectButton();
+
+  if (removeProjectButton.classList.contains("disabled")) {
+    removeProjectButton.classList.remove("disabled");
+  }
+}
+
+// Adds the class "disabled" to the add new task button
+export function disableNewTaskButton() {
+  const newTaskButton = getNewTaskButton();
+
+  if (!newTaskButton.classList.contains("disabled")) {
+    newTaskButton.classList.add("disabled");
+  }
+}
+
+// Removes the class "disabled" from the add new task button
+export function enableNewTaskButton() {
+  const newTaskButton = getNewTaskButton();
+
+  if (newTaskButton.classList.contains("disabled")) {
+    newTaskButton.classList.remove("disabled");
+  }
+}
+
+/* 
+###############################################################################
+DOM ELEMENT DATA RETRIEVAL
+###############################################################################
+*/
 // Retrieves the data-project-id attribute from an element
 export function getDataProjectId(htmlElement) {
   return htmlElement.getAttribute("data-project-id");
 }
 
+// Retrieves an element by it's data-project-id
 export function getElementByDataProjectId(id) {
   const allProjectLinks = getProjectLinks();
   let projectLink = null;

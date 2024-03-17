@@ -16,3 +16,11 @@ export function saveProjectsToLocalStorage() {
     localStorage.setItem("projectsArray", JSON.stringify(projectsArray));
   }
 }
+
+export function getProjectsFromLocalStorage() {
+  return JSON.parse(localStorage.getItem("projectsArray"));
+}
+
+export function isProjectsArrayInStorage() {
+  return localStorage.getItem("projectsArray") !== null;
+}
