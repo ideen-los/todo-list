@@ -1,4 +1,5 @@
 import {
+  getActiveProject,
   getActiveTodoItemObjects,
   projectsArray,
   saveTodoItemDate,
@@ -8,6 +9,8 @@ import AirDatepicker from "air-datepicker";
 import "air-datepicker/air-datepicker.css";
 import localeEn from "air-datepicker/locale/en";
 import { format } from "date-fns";
+import emptyTodoListImage from "./img/undraw_no_data_re_kwbl.svg";
+import emptyProjectsArrayImage from "./img/undraw_add_files_re_v09g.svg";
 
 /*
 ###############################################################################
@@ -83,66 +86,57 @@ Displays all todo items associated with a project object inside the content sect
 All properties are wrapped in a div container.
 The individual properties are wrapped in a span tag and appended to the container
 */
-export function refreshContent(project) {
+export function populateContent(project) {
   const content = getContent();
   content.innerHTML = "";
 
-  if (project === undefined || project.length === 0) {
-    displayEmptyPojectPageHeadline();
-    disableNewTaskButton();
-    disableRemoveProjectButton();
-  } else {
-    updateContentHeadline(project);
-    enableNewTaskButton();
-    enableRemoveProjectButton();
+  project.array.forEach((todoItem) => {
+    const todoItemContainer = createTodoItemContainer(todoItem);
+    const todoDateInput = createTodoItemDateInput(todoItem.id);
 
-    if (project.array.length > 0) {
-      project.array.forEach((todoItem) => {
-        const todoItemContainer = createTodoItemContainer(todoItem);
-        const todoDateInput = createTodoItemDateInput(todoItem.id);
+    const todoItemCheckComplete = createTodoItemCheckComplete();
+    todoItemContainer.appendChild(todoItemCheckComplete);
 
-        const todoItemCheckComplete = createTodoItemCheckComplete();
-        todoItemContainer.appendChild(todoItemCheckComplete);
-
-        for (let key in todoItem) {
-          /* 
+    for (let key in todoItem) {
+      /* 
         Checks if the key belongs to the item's instance and renders it in the DOM.
         It also checks if the key is not part of the isHiddenProperty array.
         */
-          if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
-            if (key === "title") {
-              const todoItemTitleWrapper = createTodoItemTitleWrapper();
-              todoItemTitleWrapper.textContent = todoItem[key];
-              todoItemContainer.appendChild(todoItemTitleWrapper);
-            } else if (key === "dueDate") {
-              if (todoItem[key] !== "") {
-                const date = format(new Date(), "yyyy-MM-dd");
-                todoDateInput.value = todoItem[key];
+      if (todoItem.hasOwnProperty(key) && !todoItem.isHiddenProperty(key)) {
+        if (key === "title") {
+          const todoItemTitleWrapper = createTodoItemTitleWrapper();
+          todoItemTitleWrapper.textContent = todoItem[key];
+          todoItemContainer.appendChild(todoItemTitleWrapper);
+        } else if (key === "dueDate") {
+          if (todoItem[key] !== "") {
+            const date = format(new Date(), "yyyy-MM-dd");
+            todoDateInput.value = todoItem[key];
 
-                if (todoItem[key] < date) {
-                  todoDateInput.classList.add("expired");
-                }
-              }
-            } else {
-              const todoItemKeyWrapper = document.createElement("span");
-              todoItemKeyWrapper.textContent = todoItem[key];
-              todoItemContainer.appendChild(todoItemKeyWrapper);
-            }
-            // Checks if a todo item has been marked as complete
-          } else if (key === "checked") {
-            if (todoItem[key] === "true") {
-              todoItemContainer.classList.add("checked");
+            if (todoItem[key] < date) {
+              todoDateInput.classList.add("expired");
             }
           }
+        } else {
+          const todoItemKeyWrapper = document.createElement("span");
+          todoItemKeyWrapper.textContent = todoItem[key];
+          todoItemContainer.appendChild(todoItemKeyWrapper);
         }
-
-        todoItemContainer.appendChild(todoDateInput);
-        content.appendChild(todoItemContainer);
-      });
+        // Checks if a todo item has been marked as complete
+      } else if (key === "checked") {
+        if (todoItem[key] === "true") {
+          todoItemContainer.classList.add("checked");
+        }
+      }
     }
-    removeDatepickersFromTodoItems();
-    addDatepickersToTodoItems();
-  }
+
+    todoItemContainer.appendChild(todoDateInput);
+    content.appendChild(todoItemContainer);
+  });
+  /* } else {
+    showEmptyTodoListMessage();
+  } */
+  removeDatepickersFromTodoItems();
+  addDatepickersToTodoItems();
 }
 
 /*
@@ -150,7 +144,7 @@ export function refreshContent(project) {
 DOM ELEMENT CREATION
 ###############################################################################
 */
-// Streamlines the creation of span elements and set a project name as value
+// Creates <span> that contains the prject name
 function createSpan(project) {
   const span = document.createElement("span");
 
@@ -159,6 +153,7 @@ function createSpan(project) {
   return span;
 }
 
+// Creates icon that represents any project
 function createIcon() {
   const icon = document.createElement("i");
 
@@ -302,15 +297,19 @@ export function createModalBox() {
   modalBox.classList.add("modal-box");
   modalOverlay.appendChild(modalBox);
 
+  const modalHeadline = document.createElement("h3");
+  modalHeadline.textContent = "Remove Project";
+  modalBox.appendChild(modalHeadline);
+
   const modalText = document.createElement("p");
-  modalText.innerHTML = `Are you sure you want to remove <strong>${projectName}<strong>?`;
+  modalText.innerHTML = `Are you sure you want to remove ${projectName}?`;
   modalBox.appendChild(modalText);
 
   const buttonContainer = document.createElement("div");
   modalBox.appendChild(buttonContainer);
 
   const confirmButton = document.createElement("button");
-  confirmButton.textContent = "Remove project";
+  confirmButton.textContent = "Remove";
   confirmButton.classList.add("modal-confirm");
   buttonContainer.appendChild(confirmButton);
 
@@ -320,6 +319,60 @@ export function createModalBox() {
   buttonContainer.appendChild(cancelButton);
 
   return modalOverlay;
+}
+
+// Creates a placeholder message with image + text
+export function createPlaceholderWithImage(img, message) {
+  const container = document.createElement("div");
+  container.classList.add("empty-todo-list");
+
+  const image = document.createElement("img");
+  image.src = img;
+  container.appendChild(image);
+
+  const text = document.createElement("p");
+  text.textContent = message;
+  container.appendChild(text);
+
+  return container;
+}
+
+// Creates a placeholder message when there are no todo items
+export function showEmptyTodoListMessage() {
+  const content = getContent();
+  const message = createPlaceholderWithImage(
+    emptyTodoListImage,
+    "There are no active todo items."
+  );
+
+  content.appendChild(message);
+}
+
+// Creates a placeholder message when there are no projects
+export function showEmptyProjectsArrayMessage() {
+  const content = getContent();
+  const message = createPlaceholderWithImage(
+    emptyProjectsArrayImage,
+    "Start by adding a project."
+  );
+
+  content.appendChild(message);
+}
+
+export function addHighlightClassToNewProjectButton() {
+  const newProjectButton = getNewProjectButton();
+
+  if (!newProjectButton.classList.contains("highlighted")) {
+    newProjectButton.classList.add("highlighted");
+  }
+}
+
+export function removeHighlightClassFromNewProjectButton() {
+  const newProjectButton = getNewProjectButton();
+
+  if (newProjectButton.classList.contains("highlighted")) {
+    newProjectButton.classList.remove("highlighted");
+  }
 }
 
 /*
@@ -341,10 +394,22 @@ export function addActiveClassToElement(htmlElement) {
   htmlElement.classList.add("active");
 }
 
+export function addActiveClassToActiveProject() {
+  if (getActiveProject() !== null) {
+    const activeProject = getActiveProject();
+    const activeProjectLink = getElementByDataProjectId(activeProject.id);
+
+    addActiveClassToElement(activeProjectLink);
+
+    return activeProject;
+  }
+}
+
 // Sets the headline above the todo items to the title property of the active project object
 export function updateContentHeadline(project) {
   const headline = getContentHeadline();
 
+  headline.innerHTML = "";
   headline.textContent = project.name;
 
   if (headline.classList.contains("no-project")) {
@@ -353,10 +418,10 @@ export function updateContentHeadline(project) {
 }
 
 // Displays a "No project selected" message for the project page title
-export function displayEmptyPojectPageHeadline() {
+export function showEmptyPojectPageHeadline() {
   const headline = getContentHeadline();
 
-  headline.textContent = "No project selected";
+  headline.innerHTML = "&nbsp;";
   headline.classList.add("no-project");
 }
 

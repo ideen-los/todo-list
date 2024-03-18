@@ -2,7 +2,7 @@ import { TodoItem } from "./todoItemClass";
 import { TodoProjectItem } from "./todoProjectClass";
 import {
   getProjectLinks,
-  refreshContent,
+  populateContent,
   getDataProjectId,
   findActiveProjectId,
   getElementId,
@@ -88,15 +88,6 @@ export function setActiveProject(project) {
   }
 }
 
-export function addActiveClassToActiveProject() {
-  const activeProject = getActiveProject();
-  const activeProjectLink = getElementByDataProjectId(activeProject.id);
-
-  addActiveClassToElement(activeProjectLink);
-
-  return activeProject;
-}
-
 export function getIndexOfProjectInProjectsArray(project) {
   return projectsArray.findIndex((item) => item === project);
 }
@@ -148,6 +139,10 @@ export function createAndStoreNewTodoItem() {
   return newTodoItem.id;
 }
 
+export function projectHasTodoItems(project) {
+  return project.array.length > 0;
+}
+
 // Changes the title of a todo item object
 export function storeTodoItemTitle(event) {
   const sanitizedValue = sanitizeUserData(event.target.textContent);
@@ -176,7 +171,7 @@ export function saveTodoItemDate(todoItemId, date) {
 
   todoItem.dueDate = date;
   saveProjectsToLocalStorage();
-  refreshContent(activeProject);
+  populateContent(activeProject);
 }
 
 export function reconstructAllTodoItems(projectArray) {

@@ -4,8 +4,7 @@ import {
   getContent,
   getProjectLinks,
   refreshNav,
-  refreshContent,
-  addActiveClassToElement,
+  populateContent,
   getDataProjectId,
   getElementId,
   focusElementAndClearContent,
@@ -22,11 +21,17 @@ import {
   createModalBox,
   getContentHeadlineContainer,
   getBody,
-  displayEmptyPojectPageHeadline,
+  showEmptyPojectPageHeadline,
   disableNewTaskButton,
   disableRemoveProjectButton,
   enableNewTaskButton,
   enableRemoveProjectButton,
+  showEmptyTodoListMessage,
+  addHighlightClassToNewProjectButton,
+  removeHighlightClassFromNewProjectButton,
+  addActiveClassToActiveProject,
+  updateContentHeadline,
+  showEmptyProjectsArrayMessage,
 } from "./dom";
 import {
   isProjectsArrayNotEmpty,
@@ -45,7 +50,7 @@ import {
   getIndexOfProjectInProjectsArray,
   setActiveProject,
   getActiveProject,
-  addActiveClassToActiveProject,
+  projectHasTodoItems,
 } from "./data";
 import {
   getProjectsFromLocalStorage,
@@ -53,6 +58,49 @@ import {
   isProjectsArrayInStorage,
   saveProjectsToLocalStorage,
 } from "./localStorage";
+
+/* 
+####################################################################
+CONTENT UPDATE & REFRESH
+Creates the todo items and projects,
+shows the headline, adds datepickers
+####################################################################
+*/
+function updateContent() {
+  const content = getContent();
+  content.innerHTML = "";
+
+  // Checks whether there are projects to display
+  if (isProjectsArrayNotEmpty()) {
+    const activeProject = getActiveProject();
+
+    // Checks if a project is marked active -> if not mark the first project in the array
+    if (activeProject === null) {
+      setActiveProject(projectsArray[0]);
+      saveProjectsToLocalStorage();
+    }
+
+    addActiveClassToActiveProject();
+    updateContentHeadline(activeProject);
+    enableNewTaskButton();
+    enableRemoveProjectButton();
+    removeHighlightClassFromNewProjectButton();
+
+    // Checks whether the active project has todo items
+    if (projectHasTodoItems(activeProject)) {
+      populateContent(activeProject);
+    } else {
+      showEmptyTodoListMessage();
+    }
+  } else {
+    // If projectsArray[] is empty change the look of the app
+    showEmptyProjectsArrayMessage();
+    showEmptyPojectPageHeadline();
+    disableNewTaskButton();
+    disableRemoveProjectButton();
+    addHighlightClassToNewProjectButton();
+  }
+}
 
 /* 
 ####################################################################
@@ -68,12 +116,12 @@ function initializeProjectNavigation() {
     if (isProjectLink(event)) {
       const projectLink = event.target;
       const projectId = getDataProjectId(projectLink);
-      const activeProject = findProjectById(projectId);
+      const clickedProject = findProjectById(projectId);
+      console.log(clickedProject);
 
-      setActiveProject(activeProject);
-      addActiveClassToActiveProject();
+      setActiveProject(clickedProject);
       saveProjectsToLocalStorage();
-      refreshContent(activeProject);
+      updateContent();
     }
   });
 }
@@ -86,6 +134,7 @@ Creates new project via click on "New Project"
 */
 (function initializeNewProjectButton() {
   const newProjectButton = getNewProjectButton();
+  const body = getBody();
 
   newProjectButton.addEventListener("click", () => {
     const newProjectId = createAndStoreNewProject(); // returns the new project's ID
@@ -94,8 +143,8 @@ Creates new project via click on "New Project"
     setActiveProject(newProject);
     saveProjectsToLocalStorage();
     refreshNav();
-    addActiveClassToActiveProject();
-    refreshContent(newProject);
+    updateContent();
+    body.focus();
   });
 })();
 
@@ -136,9 +185,7 @@ function handleProjectNameInteraction() {
     }
   });
 
-  /* 
-  Stores & updates a project name when a user updates the input field.
-  */
+  // Stores & updates a project name when a user updates the input field.
   nav.addEventListener("input", (event) => {
     if (isProjectInput(event)) {
       storeProjectName(event);
@@ -155,14 +202,18 @@ function handleProjectNameInteraction() {
     if (isProjectInput(event)) {
       const activeProject = getActiveProject();
 
+      if (activeProject.name === "") {
+        activeProject.name = "Unnamed Project";
+        saveProjectsToLocalStorage();
+      }
+
       hideProjectInputField(event);
-      refreshContent(activeProject);
+      refreshNav();
+      updateContent();
     }
   });
 
-  /* 
-  Same functionality as above for Escape & Enter key.
-  */
+  // Same functionality as above for Escape & Enter key.
   nav.addEventListener("keydown", (event) => {
     if (
       isProjectInput(event) &&
@@ -170,8 +221,14 @@ function handleProjectNameInteraction() {
     ) {
       const activeProject = getActiveProject();
 
+      if (activeProject.name === "") {
+        activeProject.name = "Unnamed Project";
+        saveProjectsToLocalStorage();
+      }
+
       hideProjectInputField(event);
-      refreshContent(activeProject);
+      refreshNav();
+      updateContent();
     }
   });
 }
@@ -192,11 +249,13 @@ function initializeRemoveProjectButton() {
         const modalBox = createModalBox();
         body.appendChild(modalBox);
 
+        // Short timeout so the browser recongnizes the new class
         setTimeout(() => {
           modalBox.classList.add("fade-in");
         }, 2);
 
         initializeModalBox();
+        body.focus();
       }
     }
   });
@@ -206,6 +265,27 @@ function initializeModalBox() {
   const modalBox = document.querySelector(".modal-container");
   const cancelButton = modalBox.querySelector(".modal-cancel");
   const confirmButton = modalBox.querySelector(".modal-confirm");
+
+  const handleKeydownEvent = (event) => {
+    if (event.key === "Escape" || event.key === "Enter") {
+      if (event.key === "Enter") {
+        const activeProject = getActiveProject();
+        const activeProjectIndex =
+          getIndexOfProjectInProjectsArray(activeProject);
+        const projectLinks = getProjectLinks();
+
+        projectsArray.splice(activeProjectIndex, 1); // remove the active project from the projectsArray[]
+        if (projectsArray.length > 0) {
+          setActiveProject(projectsArray[0]);
+        }
+        saveProjectsToLocalStorage();
+        refreshNav();
+        updateContent();
+      }
+      modalBox.remove();
+      document.removeEventListener("keydown", handleKeydownEvent);
+    }
+  };
 
   modalBox.addEventListener("click", (event) => {
     if (event.target === modalBox && event.target !== modalBox.firstChild) {
@@ -219,19 +299,18 @@ function initializeModalBox() {
       const projectLinks = getProjectLinks();
 
       projectsArray.splice(activeProjectIndex, 1); // remove the active project from the projectsArray[]
+      if (projectsArray.length > 0) {
+        setActiveProject(projectsArray[0]);
+      }
       saveProjectsToLocalStorage();
-      addActiveClassToElement(projectLinks[0]);
       refreshNav();
-      refreshContent(projectsArray[0]);
+      updateContent();
       modalBox.remove();
+      document.removeEventListener("keydown", handleKeydownEvent);
     }
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      modalBox.remove();
-    }
-  });
+  document.addEventListener("keydown", handleKeydownEvent);
 }
 
 /* 
@@ -249,7 +328,7 @@ function initializeNewTaskButton() {
       const newTodoItemId = createAndStoreNewTodoItem(); // returns the new todo item's ID
 
       saveProjectsToLocalStorage();
-      refreshContent(activeProject);
+      populateContent(activeProject);
       focusElementAndClearContent(newTodoItemId);
     }
   });
@@ -284,7 +363,7 @@ function handleTodoItemTitleInteraction() {
       if (isTextContentEmpty(event)) {
         removeTodoItemById(todoItemId);
         saveProjectsToLocalStorage();
-        refreshContent(activeProject);
+        populateContent(activeProject);
       } else {
         storeTodoItemTitle(event);
         saveProjectsToLocalStorage();
@@ -302,13 +381,13 @@ function handleTodoItemTitleInteraction() {
       if (isTextContentEmpty(event)) {
         removeTodoItemById(todoItemId);
         saveProjectsToLocalStorage();
-        refreshContent(activeProject);
+        populateContent(activeProject);
       } else {
         event.preventDefault();
 
         const newTodoItemId = createAndStoreNewTodoItem(); // returns the new item's id
         saveProjectsToLocalStorage();
-        refreshContent(activeProject);
+        populateContent(activeProject);
         focusElementAndClearContent(newTodoItemId);
       }
     }
@@ -321,7 +400,7 @@ function handleTodoItemTitleInteraction() {
       if (isTextContentEmpty(event)) {
         todoItem.resetTitle();
         saveProjectsToLocalStorage();
-        refreshContent(activeProject);
+        populateContent(activeProject);
       } else {
         storeTodoItemTitle(event);
         saveProjectsToLocalStorage();
@@ -347,7 +426,7 @@ function handleTodoItemCheckComplete() {
       setTimeout(function () {
         removeTodoItemById(todoItemId);
         saveProjectsToLocalStorage();
-        refreshContent(activeProject);
+        populateContent(activeProject);
       }, 1100);
     }
   });
@@ -368,32 +447,8 @@ if (isLocalStorageAvailable() && isProjectsArrayInStorage()) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (isProjectsArrayNotEmpty()) {
-    // Displays the name of all projects from projectsArray[]
-    refreshNav();
-    // Highlights the project with the active property set to true
-    if (isLocalStorageAvailable && getActiveProject().id !== "") {
-      const activeProject = addActiveClassToActiveProject();
-      // Displays all todo items from the first project in the projectsArray[]
-      refreshContent(activeProject);
-    } else {
-      // Highlights the first project in the projectsArray[]
-      addActiveClassToElement(getProjectLinks()[0]);
-      // Displays all todo items from the first project in the projectsArray[]
-      refreshContent(projectsArray[0]);
-    }
-    enableNewTaskButton();
-    enableRemoveProjectButton();
-  } else {
-    /* 
-    displayEmptyProjectListPlaceholderImage();
-    displayEmptyTodoItemListPlaceholderImage(); 
-    */
-    displayEmptyPojectPageHeadline();
-    disableNewTaskButton();
-    disableRemoveProjectButton();
-  }
-
+  refreshNav();
+  updateContent();
   // Associates the project names with the actual poject objects
   initializeProjectNavigation();
   // Handles updates of project name by the user
