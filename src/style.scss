@@ -545,8 +545,10 @@ aside {
 
 footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  gap: 0.3rem;
   width: 100%;
   max-width: 100%;
   padding: 1.2rem;
@@ -557,8 +559,8 @@ footer {
   border-top: 1px solid #eee;
 
   @media (max-width: 600px) {
-    display: block;
-    text-align: center;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   a,
@@ -568,5 +570,11 @@ footer {
     text-decoration: none;
     border-bottom: 1px solid;
     color: dodgerblue;
+  }
+
+  .hidden-mobile {
+    @media (max-width: 600px) {
+      display: none;
+    }
   }
 }
