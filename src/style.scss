@@ -552,6 +552,7 @@ footer {
   align-items: center;
   justify-content: center;
   width: 100%;
+  max-width: 100%;
   min-height: 5vh;
   font-size: 0.9rem;
   font-weight: 300;
@@ -559,7 +560,7 @@ footer {
   border-top: 1px solid #eee;
 
   @media (max-width: 600px) {
-    display: inline;
+    display: block;
     text-align: center;
     padding: 1rem;
   }
