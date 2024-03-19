@@ -141,7 +141,6 @@ body {
   display: flex;
   min-height: 95vh;
   max-width: 100%;
-  padding-bottom: 3rem;
 
   @media (max-width: 991px) {
     flex-direction: column;
@@ -290,7 +289,7 @@ aside {
 #content {
   width: 70%;
   max-width: 1200px;
-  padding: 1rem 2rem;
+  padding: 1rem 2rem 3rem;
 
   @media (max-width: 991px) {
     width: 100%;
@@ -560,7 +559,7 @@ footer {
   border-top: 1px solid #eee;
 
   @media (max-width: 600px) {
-    display: none;
+    display: inline;
     text-align: center;
     padding: 1rem;
   }
