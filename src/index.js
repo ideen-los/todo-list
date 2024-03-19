@@ -427,7 +427,7 @@ function handleTodoItemCheckComplete() {
       setTimeout(function () {
         removeTodoItemById(todoItemId);
         saveProjectsToLocalStorage();
-        populateContent(activeProject);
+        updateContent();
       }, 1100);
     }
   });
