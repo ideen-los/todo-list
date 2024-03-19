@@ -4,10 +4,6 @@ html,
 body {
   min-height: 100vh;
   margin: 0;
-
-  @media (max-width: 600px) {
-    font-size: 14px;
-  }
 }
 
 *,
@@ -139,7 +135,7 @@ body {
 
 #todo-app-container {
   display: flex;
-  min-height: 95vh;
+  min-height: 93vh;
   max-width: 100%;
 
   @media (max-width: 991px) {
@@ -553,8 +549,8 @@ footer {
   justify-content: center;
   width: 100%;
   max-width: 100%;
-  min-height: 5vh;
   font-size: 0.9rem;
+  line-height: 160%;
   font-weight: 300;
   color: #aaa;
   border-top: 1px solid #eee;
