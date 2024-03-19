@@ -169,6 +169,7 @@ aside {
     align-items: center;
     gap: 0.5rem;
     height: 46px;
+    max-width: 100%;
     margin: 0 0.5rem;
     padding: 0.7rem 1rem 0.7rem 0.5rem;
     border: 0;
@@ -218,6 +219,7 @@ aside {
     display: flex;
     align-items: center;
     gap: 0.3rem;
+    max-width: 100%;
     cursor: pointer;
     margin: 0.5rem;
     padding: 0.5rem 0.7rem;
@@ -257,6 +259,7 @@ aside {
       gap: 0.5rem;
       align-items: center;
       height: 26px;
+      max-width: 100%;
       margin: 0.4rem 0.3rem 0.3rem;
       letter-spacing: 0.1px;
     }
@@ -264,6 +267,7 @@ aside {
     input {
       width: 86%;
       height: 26px;
+      max-width: 100%;
       font-size: 0.99rem;
       letter-spacing: 0.15px;
       margin: 0.4rem 0.1rem 0.3rem 0.07rem;

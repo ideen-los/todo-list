@@ -117,7 +117,6 @@ function initializeProjectNavigation() {
       const projectLink = event.target;
       const projectId = getDataProjectId(projectLink);
       const clickedProject = findProjectById(projectId);
-      console.log(clickedProject);
 
       setActiveProject(clickedProject);
       saveProjectsToLocalStorage();
