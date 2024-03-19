@@ -290,8 +290,10 @@ function initializeModalBox() {
   modalBox.addEventListener("click", (event) => {
     if (event.target === modalBox && event.target !== modalBox.firstChild) {
       modalBox.remove();
+      document.removeEventListener("keydown", handleKeydownEvent);
     } else if (event.target === cancelButton) {
       modalBox.remove();
+      document.removeEventListener("keydown", handleKeydownEvent);
     } else if (event.target === confirmButton) {
       const activeProject = getActiveProject();
       const activeProjectIndex =
