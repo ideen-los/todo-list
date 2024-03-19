@@ -34,6 +34,10 @@ body {
   opacity: 0;
   transition: opacity 0.1s linear;
 
+  @media (max-width: 600px) {
+    padding: 1rem;
+  }
+
   &.fade-in {
     opacity: 1;
 
@@ -52,6 +56,10 @@ body {
     box-shadow: 0 2px 20px 0 rgba(213, 217, 217, 0.8);
     border-radius: 7px;
     transition: transform 0.05s ease-in-out;
+
+    @media (max-width: 600px) {
+      padding: 1rem 1rem 0.7rem;
+    }
 
     h3 {
       margin: 1rem 0;
@@ -107,6 +115,22 @@ body {
 .air-datepicker-body--day-name {
   color: #000 !important;
   font-weight: bold;
+}
+
+.air-datepicker-cell.-current- {
+  color: orange !important;
+}
+
+.-bottom-right- {
+  @media (max-width: 600px) {
+    left: 1rem !important;
+  }
+}
+
+.-bottom-right- .air-datepicker--pointer {
+  @media (max-width: 600px) {
+    right: 80% !important;
+  }
 }
 
 .-selected- {
@@ -408,6 +432,10 @@ aside {
     padding: 1.2rem 1rem 1.2rem 0;
     border-bottom: 1px solid #e0e0e0;
 
+    @media (max-width: 600px) {
+      flex-wrap: wrap;
+    }
+
     &__name {
       width: 80%;
       margin-right: auto;
@@ -423,6 +451,10 @@ aside {
       border: 0;
       font-size: 1rem;
       text-align: right;
+
+      @media (max-width: 600px) {
+        text-align: left;
+      }
 
       &.expired {
         color: crimson;
